@@ -3,6 +3,8 @@ use wg_2024::packet::NodeType;
 
 use super::GenericServer;
 
+mod routing;
+
 impl Flooder for GenericServer {
     const NODE_TYPE: wg_2024::packet::NodeType = NodeType::Server;
 

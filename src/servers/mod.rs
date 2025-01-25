@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 
 use common::{
-    networking::flooder::Flooder, ring_buffer::RingBuffer, slc_commands::{ServerCommand, ServerEvent}, Server
+    networking::flooder::Flooder,
+    ring_buffer::RingBuffer,
+    slc_commands::{ServerCommand, ServerEvent},
+    Server,
 };
 use crossbeam_channel::{select_biased, Receiver, Sender};
 use log::{info, warn};
@@ -12,37 +15,49 @@ use wg_2024::{
 
 mod networking;
 mod packet_handling;
+mod requests_handling;
+mod serialization;
+
+type FragmentHistory = HashMap<(NodeId, u16), (u64, Vec<[u8; FRAGMENT_DSIZE]>)>;
+type MessageHistory = HashMap<u64, [u8; FRAGMENT_DSIZE]>;
+type FloodHistory = HashMap<NodeId, RingBuffer<u64>>;
 
 pub struct GenericServer {
     id: NodeId,
-    session_id: u64,
+    session_id: u64, // wraps around 48 bits
     controller_send: Sender<ServerEvent>,
     controller_recv: Receiver<ServerCommand>,
     packet_recv: Receiver<Packet>,
     packet_send: HashMap<NodeId, Sender<Packet>>,
-    flood_history: HashMap<NodeId, RingBuffer<u64>>,
-    // ! Change types to fit this random crap
-    fragment_history: HashMap<(NodeId, u64), Vec<[u8; FRAGMENT_DSIZE]>>,
-    sent_history: HashMap<u64, (usize, Vec<[u8; FRAGMENT_DSIZE]>)>,
+    flood_history: FloodHistory,
+    fragment_history: FragmentHistory,
+    sent_history: MessageHistory,
 }
 
 impl GenericServer {
     fn handle_packet(&mut self, packet: Packet) {
         let srch: &SourceRoutingHeader = &packet.routing_header;
-        let sid = packet.session_id;
+        let sid: u64 = packet.session_id;
         match packet.pack_type {
-            PacketType::MsgFragment(frag) => todo!(),
+            PacketType::MsgFragment(frag) => {
+                self.handle_fragment(srch, sid, &frag);
+            }
             PacketType::Ack(ack) => {
                 self.handle_ack(sid, &ack);
-            },
-            PacketType::Nack(nack) => todo!(),
+            }
+            PacketType::Nack(nack) => {
+                self.handle_nack(sid, &nack);
+            }
             PacketType::FloodRequest(mut fr) => {
-                match self.handle_flood_request(srch, sid, &mut fr) {
-                    Ok(_) => info!("Flood request handled properly"),
-                    Err(_) => warn!("Error during flood request handling, dropping packet"),
+                if let Ok(()) = self.handle_flood_request(srch, sid, &mut fr) {
+                    info!("Flood request handled properly");
+                } else {
+                    warn!("Error during flood request handling, dropping packet");
                 }
-            },
-            PacketType::FloodResponse(fr) => todo!(),
+            }
+            PacketType::FloodResponse(fr) => {
+                self.handle_flood_response(&fr);
+            }
         }
     }
 

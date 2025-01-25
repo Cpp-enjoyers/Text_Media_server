@@ -10,3 +10,4 @@ compression = { git = "https://github.com/Cpp-enjoyers/compression_lib.git" }
 bincode = { version = "2.0.0-rc", features = ["serde"] }
 log = "0.4.25"
 crossbeam-channel = "0.5"
+itertools = "0.14.0"
