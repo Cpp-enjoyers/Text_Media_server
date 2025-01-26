@@ -1,9 +1,9 @@
 use std::vec;
-
+use common::slc_commands::ServerEvent;
 use log::{error, info, warn};
 use wg_2024::{
     network::SourceRoutingHeader,
-    packet::{Ack, FloodResponse, Fragment, Nack, FRAGMENT_DSIZE},
+    packet::{Ack, FloodResponse, Fragment, Nack, Packet, FRAGMENT_DSIZE},
 };
 
 use super::GenericServer;
@@ -53,13 +53,41 @@ impl GenericServer {
                 },
             );
             if entry.0 == frag.total_n_fragments {
-                todo!();
+                let data = self.fragment_history.remove(&(id, rid)).unwrap().1;
+                self.handle_request(rid, data);
             }
-            todo!(); // send back Ack
+            todo!(); // send back Ack (and swap with if)
         } else {
             error!("Received fragment with invalid source routing header!");
         }
     }
 
-    pub(crate) fn handle_flood_response(&mut self, fr: &FloodResponse) {}
+    pub(crate) fn handle_flood_response(
+        &mut self,
+        mut srch: SourceRoutingHeader,
+        sid: u64,
+        fr: FloodResponse,
+    ) {
+        match fr.path_trace.first() {
+            Some((id, _)) if *id == self.id => self.update_network_from_flood(&fr),
+            Some(_) => match srch.next_hop() {
+                Some(next_id) => {
+                    srch.increase_hop_index();
+                    let packet: Packet = Packet::new_flood_response(srch, sid, fr);
+                    if let Some(c) = self.packet_send.get(&next_id) {
+                        let _ = c.send(packet.clone());
+                        let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
+                    } else {
+                        let _ = self.controller_send.send(ServerEvent::ShortCut(packet));
+                    }
+                }
+                None => {
+                    error!("Received flood response with invalid header: {srch}");
+                }
+            },
+            None => {
+                error!("Found flood response with empty source routing header, ignoring...");
+            }
+        }
+    }
 }

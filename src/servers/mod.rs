@@ -8,6 +8,7 @@ use common::{
 };
 use crossbeam_channel::{select_biased, Receiver, Sender};
 use log::{info, warn};
+use petgraph::prelude::DiGraphMap;
 use wg_2024::{
     network::{NodeId, SourceRoutingHeader},
     packet::{Packet, PacketType, FRAGMENT_DSIZE},
@@ -21,6 +22,9 @@ mod serialization;
 type FragmentHistory = HashMap<(NodeId, u16), (u64, Vec<[u8; FRAGMENT_DSIZE]>)>;
 type MessageHistory = HashMap<u64, [u8; FRAGMENT_DSIZE]>;
 type FloodHistory = HashMap<NodeId, RingBuffer<u64>>;
+type NetworkGraph = DiGraphMap<NodeId, f64>;
+
+const MAX_SESSION_ID: u64 = (1 << 48) - 1;
 
 pub struct GenericServer {
     id: NodeId,
@@ -32,15 +36,16 @@ pub struct GenericServer {
     flood_history: FloodHistory,
     fragment_history: FragmentHistory,
     sent_history: MessageHistory,
+    network_graph: NetworkGraph,
 }
 
 impl GenericServer {
     fn handle_packet(&mut self, packet: Packet) {
-        let srch: &SourceRoutingHeader = &packet.routing_header;
+        let srch: SourceRoutingHeader = packet.routing_header;
         let sid: u64 = packet.session_id;
         match packet.pack_type {
             PacketType::MsgFragment(frag) => {
-                self.handle_fragment(srch, sid, &frag);
+                self.handle_fragment(&srch, sid, &frag);
             }
             PacketType::Ack(ack) => {
                 self.handle_ack(sid, &ack);
@@ -49,14 +54,14 @@ impl GenericServer {
                 self.handle_nack(sid, &nack);
             }
             PacketType::FloodRequest(mut fr) => {
-                if let Ok(()) = self.handle_flood_request(srch, sid, &mut fr) {
+                if let Ok(()) = self.handle_flood_request(&srch, sid, &mut fr) {
                     info!("Flood request handled properly");
                 } else {
                     warn!("Error during flood request handling, dropping packet");
                 }
             }
             PacketType::FloodResponse(fr) => {
-                self.handle_flood_response(&fr);
+                self.handle_flood_response(srch, sid, fr);
             }
         }
     }
@@ -65,9 +70,11 @@ impl GenericServer {
         match command {
             ServerCommand::AddSender(node_id, channel) => {
                 self.packet_send.insert(node_id, channel);
+                self.network_graph.add_edge(node_id, self.id, 1.);
             }
             ServerCommand::RemoveSender(node_id) => {
                 self.packet_send.remove(&node_id);
+                self.network_graph.remove_edge(node_id, self.id);
             }
             ServerCommand::Shortcut(p) => self.handle_packet(p),
         }
@@ -85,6 +92,11 @@ impl Server for GenericServer {
     where
         Self: Sized,
     {
+        let mut network_graph: DiGraphMap<NodeId, f64> = DiGraphMap::new();
+        for did in packet_send.keys() {
+            network_graph.add_edge(*did, id, 1.);
+        }
+
         GenericServer {
             id,
             session_id: 0,
@@ -95,6 +107,7 @@ impl Server for GenericServer {
             flood_history: HashMap::new(),
             fragment_history: HashMap::new(),
             sent_history: HashMap::new(),
+            network_graph,
         }
     }
 
