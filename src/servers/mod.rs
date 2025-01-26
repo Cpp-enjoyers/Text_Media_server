@@ -46,15 +46,19 @@ impl GenericServer {
         let sid: u64 = packet.session_id;
         match packet.pack_type {
             PacketType::MsgFragment(frag) => {
+                info!("Received message fragment {frag}");
                 self.handle_fragment(&srch, sid, &frag);
             }
             PacketType::Ack(ack) => {
+                info!("Received ack {ack}");
                 self.handle_ack(sid, &ack);
             }
             PacketType::Nack(nack) => {
+                info!("Received nack {nack}");
                 self.handle_nack(sid, &nack);
             }
             PacketType::FloodRequest(mut fr) => {
+                info!("Received flood request {fr}");
                 if let Ok(()) = self.handle_flood_request(&srch, sid, &mut fr) {
                     info!("Flood request handled properly");
                 } else {
@@ -62,6 +66,7 @@ impl GenericServer {
                 }
             }
             PacketType::FloodResponse(fr) => {
+                info!("Received flood response {fr}");
                 self.handle_flood_response(srch, sid, fr);
             }
         }
@@ -72,12 +77,17 @@ impl GenericServer {
             ServerCommand::AddSender(node_id, channel) => {
                 self.packet_send.insert(node_id, channel);
                 self.network_graph.add_edge(node_id, self.id, 1.);
+                info!("Received add sender command, sender id: {node_id}");
             }
             ServerCommand::RemoveSender(node_id) => {
                 self.packet_send.remove(&node_id);
                 self.network_graph.remove_edge(node_id, self.id);
+                info!("Received remove sender command, sender id: {node_id}");
             }
-            ServerCommand::Shortcut(p) => self.handle_packet(p),
+            ServerCommand::Shortcut(p) => { 
+                info!("Received packet {p} from controller shortcut");
+                self.handle_packet(p);
+            },
         }
     }
 }
@@ -116,13 +126,13 @@ impl Server for GenericServer {
         loop {
             select_biased! {
                 recv(self.controller_recv) -> command => {
-                    if let Ok(_command) = command {
-                        println!("comando");
+                    if let Ok(command) = command {
+                        self.handle_command(command);
                     }
                 },
                 recv(self.packet_recv) -> packet => {
                     if let Ok(packet) = packet {
-                        println!("{packet:?}");
+                        self.handle_packet(packet);
                     }
                 }
             }

@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use log::error;
+use log::{error, info};
 use wg_2024::{
     network::SourceRoutingHeader,
     packet::{FloodResponse, NodeType},
@@ -16,6 +16,7 @@ impl GenericServer {
     }
 
     pub(crate) fn update_network_from_flood(&mut self, fr: &FloodResponse) {
+        info!("Updating routing info received from flood response");
         for ((prev_id, prev_type), (next_id, next_type)) in fr.path_trace.iter().tuple_windows() {
             match (prev_type, next_type) {
                 (NodeType::Drone, NodeType::Drone) => {
@@ -36,6 +37,7 @@ impl GenericServer {
     }
 
     pub(crate) fn update_network_from_header(&mut self, srch: &mut SourceRoutingHeader) {
+        info!("Updating routing info from source routing header");
         if srch.hops.len() < 2 {
             return;
         }

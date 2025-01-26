@@ -53,6 +53,7 @@ impl GenericServer {
                 },
             );
             if entry.0 == frag.total_n_fragments {
+                info!("All fragments received, reconstructing request");
                 let data = self.fragment_history.remove(&(id, rid)).unwrap().1;
                 self.handle_request(rid, data);
             }
@@ -75,9 +76,11 @@ impl GenericServer {
                     srch.increase_hop_index();
                     let packet: Packet = Packet::new_flood_response(srch, sid, fr);
                     if let Some(c) = self.packet_send.get(&next_id) {
+                        info!("Forwarding flood response");
                         let _ = c.send(packet.clone());
                         let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
                     } else {
+                        warn!("Forwarding ill formed flood response using shortcut");
                         let _ = self.controller_send.send(ServerEvent::ShortCut(packet));
                     }
                 }
