@@ -1,18 +1,18 @@
-use std::vec;
 use common::slc_commands::ServerEvent;
 use log::{error, info, warn};
+use std::vec;
 use wg_2024::{
     network::SourceRoutingHeader,
     packet::{Ack, FloodResponse, Fragment, Nack, Packet, FRAGMENT_DSIZE},
 };
 
-use super::GenericServer;
+use super::{GenericServer, RID_MASK};
 
 impl GenericServer {
     #[inline]
     fn get_rid(sid: u64) -> u16 {
         // intentional, if shifted by 48 it fits into 16
-        u16::try_from(sid << 48).unwrap()
+        u16::try_from(sid & RID_MASK).unwrap()
     }
 
     pub(crate) fn handle_ack(&mut self, sid: u64, _ack: &Ack) {

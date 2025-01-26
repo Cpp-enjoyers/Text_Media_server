@@ -24,7 +24,8 @@ type MessageHistory = HashMap<u64, [u8; FRAGMENT_DSIZE]>;
 type FloodHistory = HashMap<NodeId, RingBuffer<u64>>;
 type NetworkGraph = DiGraphMap<NodeId, f64>;
 
-const MAX_SESSION_ID: u64 = (1 << 48) - 1;
+const SID_MASK: u64 = 0xFFFF_FFFF_FFFF;
+const RID_MASK: u64 = 0xFFFF;
 
 pub struct GenericServer {
     id: NodeId,

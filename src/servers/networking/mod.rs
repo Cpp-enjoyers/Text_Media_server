@@ -8,10 +8,12 @@ mod routing;
 impl Flooder for GenericServer {
     const NODE_TYPE: wg_2024::packet::NodeType = NodeType::Server;
 
+    #[inline]
     fn get_id(&self) -> wg_2024::network::NodeId {
         self.id
     }
 
+    #[inline]
     fn get_neighbours(
         &self,
     ) -> impl ExactSizeIterator<
@@ -36,6 +38,7 @@ impl Flooder for GenericServer {
             .insert(flood_id.1);
     }
 
+    #[inline]
     fn send_to_controller(&self, p: wg_2024::packet::Packet) {
         let _ = self.controller_send.send(ServerEvent::PacketSent(p));
     }
