@@ -1,7 +1,7 @@
 use common::{networking::flooder::Flooder, ring_buffer::RingBuffer, slc_commands::ServerEvent};
 use log::{error, info, warn};
 use wg_2024::{
-    network::SourceRoutingHeader,
+    network::{NodeId, SourceRoutingHeader},
     packet::{FloodRequest, FloodResponse, NodeType, Packet},
 };
 
@@ -10,10 +10,10 @@ use super::{GenericServer, SID_MASK};
 mod routing;
 
 impl Flooder for GenericServer {
-    const NODE_TYPE: wg_2024::packet::NodeType = NodeType::Server;
+    const NODE_TYPE: NodeType = NodeType::Server;
 
     #[inline]
-    fn get_id(&self) -> wg_2024::network::NodeId {
+    fn get_id(&self) -> NodeId {
         self.id
     }
 
