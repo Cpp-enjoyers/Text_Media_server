@@ -1,3 +1,9 @@
+/*
+ * TODOS: ETX with packet count + exponentially moving average
+ *        Cache shortest paths (this conflicts with ETX tho)
+ *        Multithreading
+ */
+
 use std::collections::{HashMap, VecDeque};
 
 use common::{
