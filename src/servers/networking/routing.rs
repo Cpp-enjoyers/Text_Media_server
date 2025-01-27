@@ -52,7 +52,7 @@ impl GenericServer {
         self.check_and_add_edge(srch.hops[sz - 2], srch.hops[sz - 1]);
     }
 
-    pub(crate) fn get_route(&mut self, dest: NodeId) -> Option<Vec<u8>> {
+    pub(crate) fn get_route(&self, dest: NodeId) -> Option<Vec<u8>> {
         astar(
             &self.network_graph,
             self.id,
