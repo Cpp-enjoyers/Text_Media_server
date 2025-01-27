@@ -1,7 +1,8 @@
 use itertools::Itertools;
 use log::{error, info};
+use petgraph::{algo::astar, visit::EdgeRef};
 use wg_2024::{
-    network::SourceRoutingHeader,
+    network::{NodeId, SourceRoutingHeader},
     packet::{FloodResponse, NodeType},
 };
 
@@ -36,22 +37,44 @@ impl GenericServer {
         }
     }
 
-    pub(crate) fn update_network_from_header(&mut self, srch: &mut SourceRoutingHeader) {
+    pub(crate) fn update_network_from_header(&mut self, srch: &SourceRoutingHeader) {
         info!("Updating routing info from source routing header");
-        if srch.hops.len() < 2 {
+        let sz: usize = srch.hops.len();
+        if sz < 3 {
+            error!("Found wrong src header o client/server directly connected: {srch}");
             return;
         }
-        let lst: u8 = srch.hops.pop().unwrap();
-        let fst: u8 = srch.hops.remove(0);
-        for (prev_id, next_id) in srch.hops.iter().tuple_windows() {
+        for (prev_id, next_id) in srch.hops[1..srch.hops.len()].iter().tuple_windows() {
             self.check_and_add_edge(*prev_id, *next_id);
             self.check_and_add_edge(*next_id, *prev_id);
         }
-        if let Some(d_fst) = srch.hops.first() {
-            self.check_and_add_edge(*d_fst, fst);
-        }
-        if let Some(d_lst) = srch.hops.last() {
-            self.check_and_add_edge(lst, *d_lst);
+        self.check_and_add_edge(srch.hops[0], srch.hops[1]);
+        self.check_and_add_edge(srch.hops[sz - 2], srch.hops[sz - 1]);
+    }
+
+    pub(crate) fn get_route(&mut self, dest: NodeId) -> Option<Vec<u8>> {
+        astar(
+            &self.network_graph,
+            self.id,
+            |finish| finish == dest,
+            |e| *e.weight(),
+            |_| 0.,
+        )
+        .map(|(_, p)| p)
+    }
+
+    pub(crate) fn get_routing_hdr_with_hint(
+        &mut self,
+        srch: &SourceRoutingHeader,
+        src_id: NodeId,
+    ) -> SourceRoutingHeader {
+        if let Some(p) = self.get_route(src_id) {
+            SourceRoutingHeader::initialize(p)
+        } else {
+            self.update_network_from_header(srch);
+            let mut resp_hdr: SourceRoutingHeader = srch.clone();
+            resp_hdr.reverse();
+            resp_hdr
         }
     }
 }

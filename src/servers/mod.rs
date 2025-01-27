@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use common::{
     networking::flooder::Flooder,
@@ -20,9 +20,10 @@ mod requests_handling;
 mod serialization;
 
 type FragmentHistory = HashMap<(NodeId, u16), (u64, Vec<[u8; FRAGMENT_DSIZE]>)>;
-type MessageHistory = HashMap<u64, [u8; FRAGMENT_DSIZE]>;
+type MessageHistory = HashMap<u64, (NodeId, u64, u64, [u8; FRAGMENT_DSIZE])>;
 type FloodHistory = HashMap<NodeId, RingBuffer<u64>>;
 type NetworkGraph = DiGraphMap<NodeId, f64>;
+type PendingQueue = VecDeque<u64>;
 
 const SID_MASK: u64 = 0xFFFF_FFFF_FFFF;
 const RID_MASK: u64 = 0xFFFF;
@@ -30,6 +31,8 @@ const RID_MASK: u64 = 0xFFFF;
 pub struct GenericServer {
     id: NodeId,
     session_id: u64, // wraps around 48 bits
+    need_flood: bool,
+    graph_updated: bool,
     controller_send: Sender<ServerEvent>,
     controller_recv: Receiver<ServerCommand>,
     packet_recv: Receiver<Packet>,
@@ -38,6 +41,7 @@ pub struct GenericServer {
     fragment_history: FragmentHistory,
     sent_history: MessageHistory,
     network_graph: NetworkGraph,
+    pending_packets: PendingQueue,
 }
 
 impl GenericServer {
@@ -81,13 +85,13 @@ impl GenericServer {
             }
             ServerCommand::RemoveSender(node_id) => {
                 self.packet_send.remove(&node_id);
-                self.network_graph.remove_edge(node_id, self.id);
+                self.network_graph.remove_node(node_id);
                 info!("Received remove sender command, sender id: {node_id}");
             }
-            ServerCommand::Shortcut(p) => { 
+            ServerCommand::Shortcut(p) => {
                 info!("Received packet {p} from controller shortcut");
                 self.handle_packet(p);
-            },
+            }
         }
     }
 }
@@ -111,6 +115,8 @@ impl Server for GenericServer {
         GenericServer {
             id,
             session_id: 0,
+            need_flood: true,
+            graph_updated: false,
             controller_send,
             controller_recv,
             packet_recv,
@@ -119,20 +125,37 @@ impl Server for GenericServer {
             fragment_history: HashMap::new(),
             sent_history: HashMap::new(),
             network_graph,
+            pending_packets: VecDeque::new(),
         }
     }
 
     fn run(&mut self) {
         loop {
-            select_biased! {
-                recv(self.controller_recv) -> command => {
-                    if let Ok(command) = command {
-                        self.handle_command(command);
+            if self.need_flood {
+                self.flood();
+            } else if self.graph_updated {
+                if let Some(sid) = self.pending_packets.pop_back() {
+                    info!("Trying to resend packet with sid: {sid}");
+                    let fragment: Option<&(u8, u64, u64, [u8; FRAGMENT_DSIZE])> =
+                        self.sent_history.get(&sid);
+
+                    if let Some(t) = fragment {
+                        let (src_id, i, sz, frag) = *t;
+                        self.resend_packet(sid, src_id, i, sz, frag);
+                        continue;
                     }
-                },
-                recv(self.packet_recv) -> packet => {
-                    if let Ok(packet) = packet {
-                        self.handle_packet(packet);
+                }
+            } else {
+                select_biased! {
+                    recv(self.controller_recv) -> command => {
+                        if let Ok(command) = command {
+                            self.handle_command(command);
+                        }
+                    },
+                    recv(self.packet_recv) -> packet => {
+                        if let Ok(packet) = packet {
+                            self.handle_packet(packet);
+                        }
                     }
                 }
             }

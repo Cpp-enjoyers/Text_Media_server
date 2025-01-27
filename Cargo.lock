@@ -36,7 +36,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "common"
 version = "0.1.0"
-source = "git+https://github.com/Cpp-enjoyers/common.git#6f2e2d94829140197ea1d2e044b8d1f72b9c8f2d"
+source = "git+https://github.com/Cpp-enjoyers/common.git#cd8bb04cdcdfbdefd0c51904961018020d9f4348"
 dependencies = [
  "bincode",
  "crossbeam-channel",

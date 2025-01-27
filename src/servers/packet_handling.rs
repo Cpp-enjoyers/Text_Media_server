@@ -2,8 +2,8 @@ use common::slc_commands::ServerEvent;
 use log::{error, info, warn};
 use std::vec;
 use wg_2024::{
-    network::SourceRoutingHeader,
-    packet::{Ack, FloodResponse, Fragment, Nack, Packet, FRAGMENT_DSIZE},
+    network::{NodeId, SourceRoutingHeader},
+    packet::{Ack, Fragment, Nack, NackType, Packet, FRAGMENT_DSIZE},
 };
 
 use super::{GenericServer, RID_MASK};
@@ -23,8 +23,23 @@ impl GenericServer {
     }
 
     pub(crate) fn handle_nack(&mut self, sid: u64, nack: &Nack) {
-        if let Some(f) = self.sent_history.get(&sid) {
-            todo!();
+        info!("Handling received nack: {nack}");
+        match nack.nack_type {
+            NackType::Dropped => {
+                // TODO
+                info!("ETX?");
+            }
+            NackType::ErrorInRouting(id) => {
+                self.network_graph.remove_node(id);
+            }
+            _ => {}
+        }
+
+        let fragment: Option<&(u8, u64, u64, [u8; FRAGMENT_DSIZE])> = self.sent_history.get(&sid);
+
+        if let Some(t) = fragment {
+            let (src_id, i, sz, frag) = *t;
+            self.resend_packet(sid, src_id, i, sz, frag);
         } else {
             warn!("Received Nack with unknown sid: {sid}");
         }
@@ -39,7 +54,7 @@ impl GenericServer {
     ) {
         let rid: u16 = Self::get_rid(sid);
         if let Some(&id) = srch.hops.first() {
-            let entry: &mut (u64, Vec<[u8; 128]>) =
+            let entry: &mut (u64, Vec<[u8; FRAGMENT_DSIZE]>) =
                 self.fragment_history.entry((id, rid)).or_insert((
                     0,
                     // should be fine on 64 bit machines
@@ -47,7 +62,7 @@ impl GenericServer {
                 ));
             entry.1.get_mut(frag.fragment_index as usize).map_or_else(
                 || warn!("Received fragment with invalid index"),
-                |v: &mut [u8; 128]| {
+                |v: &mut [u8; FRAGMENT_DSIZE]| {
                     entry.0 += 1;
                     *v = frag.data;
                 },
@@ -55,42 +70,40 @@ impl GenericServer {
             if entry.0 == frag.total_n_fragments {
                 info!("All fragments received, reconstructing request");
                 let data = self.fragment_history.remove(&(id, rid)).unwrap().1;
-                self.handle_request(rid, data);
+                self.handle_request(srch, id, rid, data);
             }
-            todo!(); // send back Ack (and swap with if)
+            self.send_ack(srch, srch.hops[0], sid, frag.fragment_index);
         } else {
             error!("Received fragment with invalid source routing header!");
         }
     }
 
-    pub(crate) fn handle_flood_response(
+    pub(crate) fn send_ack(
         &mut self,
-        mut srch: SourceRoutingHeader,
+        srch: &SourceRoutingHeader,
+        src_id: NodeId,
         sid: u64,
-        fr: FloodResponse,
+        frag_idx: u64,
     ) {
-        match fr.path_trace.first() {
-            Some((id, _)) if *id == self.id => self.update_network_from_flood(&fr),
-            Some(_) => match srch.next_hop() {
-                Some(next_id) => {
-                    srch.increase_hop_index();
-                    let packet: Packet = Packet::new_flood_response(srch, sid, fr);
-                    if let Some(c) = self.packet_send.get(&next_id) {
-                        info!("Forwarding flood response");
-                        let _ = c.send(packet.clone());
-                        let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
-                    } else {
-                        warn!("Forwarding ill formed flood response using shortcut");
-                        let _ = self.controller_send.send(ServerEvent::ShortCut(packet));
-                    }
-                }
-                None => {
-                    error!("Received flood response with invalid header: {srch}");
-                }
-            },
-            None => {
-                error!("Found flood response with empty source routing header, ignoring...");
-            }
+        let hdr: SourceRoutingHeader = self.get_routing_hdr_with_hint(srch, src_id);
+        let ack: Packet = Packet::new_ack(hdr, sid, frag_idx);
+
+        info!("Sending ack {ack}, receiving route: {srch}");
+
+        if ack.routing_header.len() < 2 {
+            error!(
+                "Error, srch of response ack: {}. Dropping response",
+                ack.routing_header
+            );
+            return;
+        }
+
+        if let Some(c) = self.packet_send.get(&ack.routing_header.hops[1]) {
+            let _ = c.send(ack.clone());
+            let _ = self.controller_send.send(ServerEvent::PacketSent(ack));
+        } else {
+            error!("Unable to find channel of designated nbr! CRITICAL");
+            panic!();
         }
     }
 }
