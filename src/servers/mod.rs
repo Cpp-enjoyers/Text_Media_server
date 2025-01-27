@@ -86,6 +86,7 @@ impl GenericServer {
         match command {
             ServerCommand::AddSender(node_id, channel) => {
                 self.packet_send.insert(node_id, channel);
+                self.network_graph.add_edge(self.id, node_id, 1.);
                 self.network_graph.add_edge(node_id, self.id, 1.);
                 info!("Received add sender command, sender id: {node_id}");
             }
@@ -115,6 +116,7 @@ impl Server for GenericServer {
     {
         let mut network_graph: DiGraphMap<NodeId, f64> = DiGraphMap::new();
         for did in packet_send.keys() {
+            network_graph.add_edge(id, *did, 1.);
             network_graph.add_edge(*did, id, 1.);
         }
 
