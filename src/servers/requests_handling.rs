@@ -8,7 +8,7 @@ use common::{
     web_messages::{Compression, Request, ResponseMessage, Serializable, TextRequest},
 };
 use compression::{bypass::BypassCompressor, lzw::LZWCompressor, Compressor};
-use log::{error, info};
+use log::{error, warn};
 use wg_2024::{
     network::{NodeId, SourceRoutingHeader},
     packet::{Fragment, Packet, FRAGMENT_DSIZE},
@@ -24,15 +24,6 @@ impl GenericServer {
     fn generate_response_id(sid: u64, rid: u16) -> u64 {
         (sid << 16) | u64::from(rid)
     }
-
-    /*
-    #[inline]
-    fn get_sid_and_update(&mut self) -> u64 {
-        let old: u64 = self.session_id;
-        self.session_id = (self.session_id + 1) & SID_MASK;
-        old
-    }
-      */
 
     fn compress(data: Vec<u8>, comp: &Compression) -> Result<Vec<u8>, String> {
         match comp {
@@ -76,7 +67,7 @@ impl GenericServer {
                         resp = ResponseMessage::new_text_list_response(
                             self.id,
                             req.compression_type,
-                            Self::list_dir("./public/").unwrap(),
+                            Self::list_dir("./public/").unwrap_or_default(),
                         );
                     }
                     TextRequest::Text(str) => {
@@ -143,12 +134,18 @@ impl GenericServer {
                         let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
                     }
                 } else {
-                    error!("Unable to find channel of designated nbr! CRITICAL");
-                    panic!();
+                    for (i, frag) in data.into_iter().enumerate() {
+                        let sid: u64 = (self.session_id << 16) | u64::from(rid);
+                        self.sent_history
+                            .insert(sid, (src_id, i as u64, sz as u64, frag));
+                        self.session_id = (self.session_id + 1) & SID_MASK;
+                        self.pending_packets.push_back(sid);
+                    }
+                    error!("Unable to find channel of designated nbr! pending response...");
                 }
             }
             Err(_) => {
-                error!("Error during serialization of reponse, dropping response");
+                error!(target: "CRITICAL", "Error during serialization of reponse, dropping response");
             }
         }
     }
@@ -171,8 +168,9 @@ impl GenericServer {
                 .get(&packet.routing_header.hops[1])
                 .map_or_else(
                     || {
-                        error!("Unable to find channel of designated nbr! CRITICAL");
-                        panic!()
+                        error!(target: "CRITICAL","Unable to find channel of designated nbr!, putting in queue!");
+                        self.graph_updated = false;
+                        self.pending_packets.push_back(sid);
                     },
                     |c| {
                         let _ = c.send(packet.clone());
@@ -180,7 +178,7 @@ impl GenericServer {
                     },
                 );
         } else {
-            info!("Failed to resend packet with sid: {sid}");
+            warn!("Failed to resend packet with sid: {sid}");
             self.graph_updated = false;
             self.pending_packets.push_back(sid);
         }

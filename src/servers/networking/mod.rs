@@ -9,6 +9,8 @@ use wg_2024::{
 use super::{GenericServer, SID_MASK};
 
 mod routing;
+#[cfg(test)]
+mod test;
 
 impl Flooder for GenericServer {
     const NODE_TYPE: NodeType = NodeType::Server;

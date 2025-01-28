@@ -150,7 +150,6 @@ impl Server for GenericServer {
                     if let Some(t) = fragment {
                         let (src_id, i, sz, frag) = *t;
                         self.resend_packet(sid, src_id, i, sz, frag);
-                        continue;
                     }
                 }
             } else {
@@ -168,5 +167,15 @@ impl Server for GenericServer {
                 }
             }
         }
+    }
+}
+
+// debug functions
+impl GenericServer {
+    fn print_graph(&self) {
+        println!("{:?}", self.network_graph);
+    }
+    fn get_graph(&self) -> &NetworkGraph {
+        &self.network_graph
     }
 }

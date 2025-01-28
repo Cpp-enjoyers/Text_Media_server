@@ -10,7 +10,7 @@ use crate::servers::GenericServer;
 
 impl GenericServer {
     // TODO remove if too hard to do ETX
-    fn check_and_add_edge(&mut self, from: u8, to: u8) -> bool {
+    pub(super) fn check_and_add_edge(&mut self, from: u8, to: u8) -> bool {
         (!self.network_graph.contains_edge(from, to))
             .then(|| self.network_graph.add_edge(from, to, 1.))
             .is_some()
@@ -28,7 +28,11 @@ impl GenericServer {
                     self.check_and_add_edge(*prev_id, *next_id);
                 }
                 (_, NodeType::Drone) => {
-                    self.check_and_add_edge(*next_id, *prev_id);
+                    if *prev_id == self.id {
+                        self.check_and_add_edge(*prev_id, *next_id);
+                    } else {
+                        self.check_and_add_edge(*next_id, *prev_id);
+                    }
                 }
                 (_, _) => {
                     error!("Found a Client/Server connected to another Client/Server in flood response: {fr}");
@@ -44,12 +48,12 @@ impl GenericServer {
             error!("Found wrong src header o client/server directly connected: {srch}");
             return;
         }
-        for (prev_id, next_id) in srch.hops[1..srch.hops.len()].iter().tuple_windows() {
+        for (prev_id, next_id) in srch.hops[1..srch.hops.len() - 1].iter().tuple_windows() {
             self.check_and_add_edge(*prev_id, *next_id);
             self.check_and_add_edge(*next_id, *prev_id);
         }
-        self.check_and_add_edge(srch.hops[0], srch.hops[1]);
-        self.check_and_add_edge(srch.hops[sz - 2], srch.hops[sz - 1]);
+        self.check_and_add_edge(srch.hops[1], srch.hops[0]);
+        self.check_and_add_edge(srch.hops[sz - 1], srch.hops[sz - 2]);
     }
 
     pub(crate) fn get_route(&self, dest: NodeId) -> Option<Vec<u8>> {

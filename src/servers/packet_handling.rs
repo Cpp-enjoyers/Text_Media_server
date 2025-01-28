@@ -27,7 +27,7 @@ impl GenericServer {
         match nack.nack_type {
             NackType::Dropped => {
                 // TODO
-                info!("ETX?");
+                info!(target: "TODO", "ETX?");
             }
             NackType::ErrorInRouting(id) => {
                 self.network_graph.remove_node(id);
@@ -43,6 +43,8 @@ impl GenericServer {
         } else {
             warn!("Received Nack with unknown sid: {sid}");
         }
+
+        self.need_flood = true;
     }
 
     #[allow(clippy::cast_possible_truncation)]
@@ -68,8 +70,9 @@ impl GenericServer {
                 },
             );
             if entry.0 == frag.total_n_fragments {
-                info!("All fragments received, reconstructing request");
-                let data = self.fragment_history.remove(&(id, rid)).unwrap().1;
+                info!("All fragments received, reconstructing request {rid}");
+                let data: Vec<[u8; FRAGMENT_DSIZE]> =
+                    self.fragment_history.remove(&(id, rid)).unwrap().1;
                 self.handle_request(srch, id, rid, data);
             }
             self.send_ack(srch, srch.hops[0], sid, frag.fragment_index);
@@ -85,7 +88,8 @@ impl GenericServer {
         sid: u64,
         frag_idx: u64,
     ) {
-        let hdr: SourceRoutingHeader = self.get_routing_hdr_with_hint(srch, src_id);
+        let mut hdr: SourceRoutingHeader = self.get_routing_hdr_with_hint(srch, src_id);
+        hdr.increase_hop_index();
         let ack: Packet = Packet::new_ack(hdr, sid, frag_idx);
 
         info!("Sending ack {ack}, receiving route: {srch}");
@@ -102,8 +106,8 @@ impl GenericServer {
             let _ = c.send(ack.clone());
             let _ = self.controller_send.send(ServerEvent::PacketSent(ack));
         } else {
-            error!("Unable to find channel of designated nbr! CRITICAL");
-            panic!();
+            warn!("Can't find Ack route, shortcutting");
+            let _ = self.controller_send.send(ServerEvent::ShortCut(ack));
         }
     }
 }
