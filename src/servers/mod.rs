@@ -24,6 +24,8 @@ mod networking;
 mod packet_handling;
 mod requests_handling;
 mod serialization;
+#[cfg(test)]
+mod test_utils;
 
 type FragmentHistory = HashMap<(NodeId, u16), (u64, Vec<[u8; FRAGMENT_DSIZE]>)>;
 type MessageHistory = HashMap<u64, (NodeId, u64, u64, [u8; FRAGMENT_DSIZE])>;

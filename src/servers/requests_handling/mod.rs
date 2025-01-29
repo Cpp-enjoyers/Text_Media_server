@@ -186,6 +186,7 @@ impl GenericServer {
     }
 }
 
+/*
 #[test]
 fn dummy_test() {
     let resp = ResponseMessage::new_text_list_response(
@@ -195,7 +196,7 @@ fn dummy_test() {
     );
     println!("{resp:?}")
 }
-
+ */
 /*
 #[test]
     fn dummy_test() {

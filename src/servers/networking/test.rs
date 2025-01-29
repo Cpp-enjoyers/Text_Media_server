@@ -1,22 +1,6 @@
-use common::Server;
 use itertools::Itertools;
 use petgraph::prelude::GraphMap;
-use std::{
-    collections::HashMap,
-    hash::{BuildHasher, Hash},
-};
-
-use crate::servers::GenericServer;
-
-#[must_use]
-fn get_dummy_server() -> GenericServer {
-    let (ctrl_send, _) = crossbeam_channel::unbounded();
-    let (_, ctrl_recv) = crossbeam_channel::unbounded();
-    let (_, server_recv) = crossbeam_channel::unbounded();
-    let server: GenericServer =
-        GenericServer::new(0, ctrl_send, ctrl_recv, server_recv, HashMap::new());
-    server
-}
+use std::hash::{BuildHasher, Hash};
 
 /// compares two graphmaps
 fn graphmap_eq<N, E, Ty, Ix>(a: &GraphMap<N, E, Ty, Ix>, b: &GraphMap<N, E, Ty, Ix>) -> bool
@@ -54,8 +38,7 @@ mod routing_tests {
     };
 
     use crate::servers::{
-        networking::test::{get_dummy_server, graphmap_eq},
-        GenericServer, NetworkGraph,
+        networking::test::graphmap_eq, test_utils::get_dummy_server, GenericServer, NetworkGraph,
     };
 
     /// compares two graphs
@@ -230,7 +213,7 @@ mod networking_tests {
 
     use crate::servers::{networking::test::graphmap_eq, GenericServer, NetworkGraph};
 
-    use super::get_dummy_server;
+    use crate::servers::test_utils::get_dummy_server;
 
     #[test]
     fn test_flood_buffer() {

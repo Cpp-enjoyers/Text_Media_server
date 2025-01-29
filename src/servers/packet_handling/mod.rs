@@ -8,9 +8,12 @@ use wg_2024::{
 
 use super::{GenericServer, RID_MASK};
 
+#[cfg(test)]
+mod test;
+
 impl GenericServer {
     #[inline]
-    fn get_rid(sid: u64) -> u16 {
+    pub(super) fn get_rid(sid: u64) -> u16 {
         // intentional, if shifted by 48 it fits into 16
         u16::try_from(sid & RID_MASK).unwrap()
     }
