@@ -8,7 +8,7 @@ use common::{
     web_messages::{Compression, Request, ResponseMessage, Serializable, TextRequest},
 };
 use compression::{bypass::BypassCompressor, lzw::LZWCompressor, Compressor};
-use log::{error, warn};
+use log::{error, info, warn};
 use wg_2024::{
     network::{NodeId, SourceRoutingHeader},
     packet::{Fragment, Packet, FRAGMENT_DSIZE},
@@ -85,9 +85,10 @@ impl GenericServer {
                     );
                 }
             }
+            info!(target: &self.target_topic, "Sending response: {resp:?}");
             self.send_response(srch, src_id, rid, &resp);
         } else {
-            error!(target: &self.target_topic, "Received undeserializable request, ignoring message");
+            error!(target: &self.target_topic, "Received undeserializable request, sending invalid response");
         }
         // self.session_id = (self.session_id + 1) & SID_MASK;
     }
@@ -183,6 +184,16 @@ impl GenericServer {
             self.pending_packets.push_back(sid);
         }
     }
+}
+
+#[test]
+fn dummy_test() {
+    let resp = ResponseMessage::new_text_list_response(
+        0,
+        Compression::LZW,
+        GenericServer::list_dir("./public/").unwrap_or_default(),
+    );
+    println!("{resp:?}")
 }
 
 /*
