@@ -217,12 +217,21 @@ mod routing_tests {
 
 #[cfg(test)]
 mod networking_tests {
-    use std::{collections::HashMap, env::{self, set_var}, thread, time::Duration};
+    use std::{
+        collections::HashMap,
+        env::{self, set_var},
+        thread,
+        time::Duration,
+    };
 
     use ap2024_unitn_cppenjoyers_drone::CppEnjoyersDrone;
     use common::{networking::flooder::Flooder, slc_commands::ServerEvent, Server};
     use crossbeam_channel::{unbounded, Sender};
-    use wg_2024::{drone::Drone, network::{NodeId, SourceRoutingHeader}, packet::{Fragment, Packet, PacketType}};
+    use wg_2024::{
+        drone::Drone,
+        network::{NodeId, SourceRoutingHeader},
+        packet::{Packet, PacketType},
+    };
 
     use crate::servers::{networking::test::graphmap_eq, GenericServer, NetworkGraph};
 
@@ -298,7 +307,8 @@ mod networking_tests {
             0.0,
         );
         // Drone 13
-        let neighbours13: HashMap<NodeId, Sender<Packet>> = HashMap::from([(11, d_send.clone()), (14, d14_send.clone())]);
+        let neighbours13: HashMap<NodeId, Sender<Packet>> =
+            HashMap::from([(11, d_send.clone()), (14, d14_send.clone())]);
         let mut drone13: CppEnjoyersDrone = CppEnjoyersDrone::new(
             13,
             d_event_send.clone(),
@@ -308,7 +318,8 @@ mod networking_tests {
             0.0,
         );
         // Drone 14
-        let neighbours14: HashMap<NodeId, Sender<Packet>> = HashMap::from([(11, d_send.clone()), (13, d13_send.clone())]);
+        let neighbours14: HashMap<NodeId, Sender<Packet>> =
+            HashMap::from([(11, d_send.clone()), (13, d13_send.clone())]);
         let mut drone14: CppEnjoyersDrone = CppEnjoyersDrone::new(
             14,
             d_event_send.clone(),
@@ -319,9 +330,7 @@ mod networking_tests {
         );
 
         // server
-        let neighbors_s = HashMap::from([
-            (11, d_send.clone()),
-        ]);
+        let neighbors_s = HashMap::from([(11, d_send.clone())]);
         let mut server = GenericServer::new(
             1,
             s_event_send.clone(),
@@ -350,26 +359,33 @@ mod networking_tests {
         server.flood();
         while let Ok(p) = server.packet_recv.recv_timeout(Duration::from_secs(1)) {
             match p.pack_type {
-                PacketType::FloodResponse(_) | PacketType::FloodRequest(_) => {},
+                PacketType::FloodResponse(_) | PacketType::FloodRequest(_) => {}
                 _ => panic!(),
             }
             server.handle_packet(p);
         }
 
-        assert!(graphmap_eq(&server.network_graph, &NetworkGraph::from_edges([
-            (1, 11, 1.),
-            (11, 12, 1.),
-            (12, 11, 1.),
-            (11, 13, 1.),
-            (13, 11, 1.),
-            (13, 14, 1.),
-            (14, 13, 1.),
-            (11, 14, 1.),
-            (14, 11, 1.),
-        ])))
+        assert!(graphmap_eq(
+            &server.network_graph,
+            &NetworkGraph::from_edges([
+                (1, 11, 1.),
+                (11, 12, 1.),
+                (12, 11, 1.),
+                (11, 13, 1.),
+                (13, 11, 1.),
+                (13, 14, 1.),
+                (14, 13, 1.),
+                (11, 14, 1.),
+                (14, 11, 1.),
+            ])
+        ))
     }
-    /*
+
+    #[test]
     fn test_flood_big_topology() {
+        env::set_var("RUST_LOG", "info");
+        let _ = env_logger::try_init();
+
         // Server 1 channels
         let (s_send, s_recv) = unbounded();
         // Server 2 channels
@@ -404,7 +420,8 @@ mod networking_tests {
             0.0,
         );
         // Drone 12
-        let neighbours12: HashMap<NodeId, Sender<Packet>> = HashMap::from([(1, c_send.clone()), (11, d_send.clone())]);
+        let neighbours12: HashMap<NodeId, Sender<Packet>> =
+            HashMap::from([(1, s_send.clone()), (11, d_send.clone())]);
         let mut drone12: CppEnjoyersDrone = CppEnjoyersDrone::new(
             12,
             unbounded().0,
@@ -454,11 +471,11 @@ mod networking_tests {
 
         // client 2
         let neighbours2 = HashMap::from([(13, d13_send.clone()), (14, d14_send.clone())]);
-        let mut client2 = WebBrowser::new(
+        let mut server2 = GenericServer::new(
             2,
-            c_event_send.clone(),
-            c2_command_recv,
-            c2_recv.clone(),
+            s_event_send.clone(),
+            s2_command_recv,
+            s2_recv.clone(),
             neighbours2,
         );
 
@@ -480,28 +497,16 @@ mod networking_tests {
         });
 
         thread::spawn(move || {
-            client1.run();
+            server2.run();
         });
 
-        thread::spawn(move || {
-            client2.run();
-        });
-
-        println!("waiting for messages");
-
-    }
-    */
-    #[test]
-    fn dummy_test() {
-        env::set_var("RUST_LOG", "info");
-        env_logger::try_init();
-
-        let mut server: GenericServer = get_dummy_server();
-        let mut v = Vec::new();
-        v.resize(128, 0);
-        v[0] = 2;
-        v[2] = 1;
-        let pkt: Packet = Packet::new_fragment(SourceRoutingHeader::new(vec![2, 9, 3], 2), 0, Fragment::new(0, 1, v.try_into().unwrap()));
-        server.handle_packet(pkt);
+        server1.flood();
+        while let Ok(p) = server1.packet_recv.recv_timeout(Duration::from_secs(1)) {
+            match p.pack_type {
+                PacketType::FloodResponse(_) | PacketType::FloodRequest(_) => {}
+                _ => panic!(),
+            }
+            server1.handle_packet(p);
+        }
     }
 }

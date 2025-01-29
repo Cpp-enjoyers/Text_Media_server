@@ -69,13 +69,13 @@ impl GenericServer {
                     *v = frag.data;
                 },
             );
+            self.send_ack(srch, srch.hops[0], sid, frag.fragment_index);
             if entry.0 == frag.total_n_fragments {
                 info!("All fragments received, reconstructing request {rid}");
                 let data: Vec<[u8; FRAGMENT_DSIZE]> =
                     self.fragment_history.remove(&(id, rid)).unwrap().1;
                 self.handle_request(srch, id, rid, data);
             }
-            self.send_ack(srch, srch.hops[0], sid, frag.fragment_index);
         } else {
             error!("Received fragment with invalid source routing header!");
         }

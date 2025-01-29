@@ -184,3 +184,19 @@ impl GenericServer {
         }
     }
 }
+
+/*
+#[test]
+    fn dummy_test() {
+        env::set_var("RUST_LOG", "info");
+        env_logger::try_init();
+
+        let mut server: GenericServer = get_dummy_server();
+        let mut v = Vec::new();
+        v.resize(128, 0);
+        v[0] = 2;
+        v[2] = 1;
+        let pkt: Packet = Packet::new_fragment(SourceRoutingHeader::new(vec![2, 9, 3], 2), 0, Fragment::new(0, 1, v.try_into().unwrap()));
+        server.handle_packet(pkt);
+    }
+ */
