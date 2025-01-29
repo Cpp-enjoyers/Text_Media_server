@@ -169,13 +169,3 @@ impl Server for GenericServer {
         }
     }
 }
-
-// debug functions
-impl GenericServer {
-    fn print_graph(&self) {
-        println!("{:?}", self.network_graph);
-    }
-    fn get_graph(&self) -> &NetworkGraph {
-        &self.network_graph
-    }
-}
