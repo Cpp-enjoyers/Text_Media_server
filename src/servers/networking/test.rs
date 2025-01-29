@@ -255,7 +255,7 @@ mod networking_tests {
     }
 
     #[test]
-    fn test_flood() {
+    fn test_flood_small_topology() {
         // Server channels
         let (c_send, c_recv) = unbounded();
         // Drone 11 channels
@@ -354,6 +354,6 @@ mod networking_tests {
         // wait for flood to end
         sleep(Duration::from_secs(1));
 
-        
+
     }
 }

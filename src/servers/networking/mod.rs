@@ -90,5 +90,6 @@ impl GenericServer {
             let _ = c.send(flood.clone());
         }
         let _ = self.controller_send.send(ServerEvent::PacketSent(flood));
+        self.need_flood = false;
     }
 }
