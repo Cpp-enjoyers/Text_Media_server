@@ -13,3 +13,4 @@ crossbeam-channel = "0.5"
 itertools = "0.14.0"
 petgraph = "0.7.1"
 ap2024_unitn_cppenjoyers_drone = { git = "https://github.com/Cpp-enjoyers/drone.git" }
+env_logger = "0.11.6"

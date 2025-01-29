@@ -117,7 +117,7 @@ impl Server for GenericServer {
         let mut network_graph: DiGraphMap<NodeId, f64> = DiGraphMap::new();
         for did in packet_send.keys() {
             network_graph.add_edge(id, *did, 1.);
-            network_graph.add_edge(*did, id, 1.);
+            // network_graph.add_edge(*did, id, 1.);
         }
 
         GenericServer {
@@ -140,8 +140,9 @@ impl Server for GenericServer {
     fn run(&mut self) {
         loop {
             if self.need_flood {
+                info!("Starting new flood request to construct network");
                 self.flood();
-            } else if self.graph_updated {
+            } else if self.graph_updated && !self.pending_packets.is_empty() {
                 if let Some(sid) = self.pending_packets.pop_back() {
                     info!("Trying to resend packet with sid: {sid}");
                     let fragment: Option<&(u8, u64, u64, [u8; FRAGMENT_DSIZE])> =
