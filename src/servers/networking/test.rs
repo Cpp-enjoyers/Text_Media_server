@@ -217,11 +217,7 @@ mod routing_tests {
 
 #[cfg(test)]
 mod networking_tests {
-    use std::{
-        collections::HashMap,
-        thread,
-        time::Duration,
-    };
+    use std::{collections::HashMap, thread, time::Duration};
 
     use ap2024_unitn_cppenjoyers_drone::CppEnjoyersDrone;
     use common::{networking::flooder::Flooder, slc_commands::ServerEvent, Server};
@@ -460,7 +456,8 @@ mod networking_tests {
         );
 
         // client 1
-        let neighbours1: HashMap<u8, Sender<Packet>> = HashMap::from([(11, d_send.clone()), (12, d12_send.clone())]);
+        let neighbours1: HashMap<u8, Sender<Packet>> =
+            HashMap::from([(11, d_send.clone()), (12, d12_send.clone())]);
         let mut server1: GenericServer = GenericServer::new(
             1,
             s_event_send.clone(),
@@ -470,7 +467,8 @@ mod networking_tests {
         );
 
         // server 2
-        let neighbours2: HashMap<u8, Sender<Packet>> = HashMap::from([(13, d13_send.clone()), (14, d14_send.clone())]);
+        let neighbours2: HashMap<u8, Sender<Packet>> =
+            HashMap::from([(13, d13_send.clone()), (14, d14_send.clone())]);
         let mut server2: GenericServer = GenericServer::new(
             2,
             s_event_send.clone(),
@@ -510,19 +508,22 @@ mod networking_tests {
             }
         }
 
-        assert!(graphmap_eq(&server1.network_graph, &NetworkGraph::from_edges([
-            (1, 12, 1.),
-            (1, 11, 1.),
-            (12, 11, 1.),
-            (11, 12, 1.),
-            (11, 13, 1.),
-            (13, 11, 1.),
-            (11, 14, 1.),
-            (14, 11, 1.),
-            (14, 13, 1.),
-            (13, 14, 1.),
-            (13, 2, 1.),
-            (14, 2, 1.),
-        ])));
+        assert!(graphmap_eq(
+            &server1.network_graph,
+            &NetworkGraph::from_edges([
+                (1, 12, 1.),
+                (1, 11, 1.),
+                (12, 11, 1.),
+                (11, 12, 1.),
+                (11, 13, 1.),
+                (13, 11, 1.),
+                (11, 14, 1.),
+                (14, 11, 1.),
+                (14, 13, 1.),
+                (13, 14, 1.),
+                (13, 2, 1.),
+                (14, 2, 1.),
+            ])
+        ));
     }
 }

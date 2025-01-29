@@ -95,7 +95,7 @@ impl GenericServer {
         info!("Sending ack {ack}, receiving route: {srch}");
 
         if ack.routing_header.len() < 2 {
-            error!(target: &self.target_topic, 
+            error!(target: &self.target_topic,
                 "Error, srch of response ack: {}. Dropping response",
                 ack.routing_header
             );

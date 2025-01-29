@@ -86,7 +86,7 @@ impl GenericServer {
             FloodRequest::initialize(self.session_id, self.id, NodeType::Server),
         );
         self.session_id = (self.session_id + 1) & SID_MASK;
-        for (id, c) in self.packet_send.iter() {
+        for (id, c) in &self.packet_send {
             info!(target: &self.target_topic, "Sending flood request to {id}");
             let _ = c.send(flood.clone());
         }
