@@ -219,7 +219,6 @@ mod routing_tests {
 mod networking_tests {
     use std::{
         collections::HashMap,
-        env,
         thread,
         time::Duration,
     };
@@ -384,8 +383,8 @@ mod networking_tests {
 
     #[test]
     fn test_flood_big_topology() {
-        env::set_var("RUST_LOG", "info");
-        let _ = env_logger::try_init();
+        // env::set_var("RUST_LOG", "info");
+        // let _ = env_logger::try_init();
 
         // Server 1 channels
         let (s_send, s_recv) = unbounded();
@@ -402,8 +401,8 @@ mod networking_tests {
         // SC - needed to not make the drone crash
         let (_d_command_send, d_command_recv) = unbounded();
         let (s_event_send, _) = unbounded();
-        let (_, s1_command_recv) = unbounded();
-        let (_, s2_command_recv) = unbounded();
+        let (_b, s1_command_recv) = unbounded();
+        let (_a, s2_command_recv) = unbounded();
 
         // Drone 11
         let neighbours11: HashMap<NodeId, Sender<Packet>> = HashMap::from([
@@ -501,8 +500,8 @@ mod networking_tests {
             server2.run();
         });
 
-        server1.run();
-        while let Ok(p) = server1.packet_recv.recv_timeout(Duration::from_secs(10)) {
+        server1.flood();
+        while let Ok(p) = server1.packet_recv.recv_timeout(Duration::from_secs(1)) {
             match p.pack_type {
                 PacketType::FloodResponse(_) | PacketType::FloodRequest(_) => {
                     server1.handle_packet(p);
@@ -511,9 +510,6 @@ mod networking_tests {
             }
         }
 
-        println!("{:?}", server1.network_graph)
-
-        /*
         assert!(graphmap_eq(&server1.network_graph, &NetworkGraph::from_edges([
             (1, 12, 1.),
             (1, 11, 1.),
@@ -528,6 +524,5 @@ mod networking_tests {
             (13, 2, 1.),
             (14, 2, 1.),
         ])));
-        */
     }
 }

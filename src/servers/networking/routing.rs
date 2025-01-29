@@ -38,7 +38,6 @@ impl GenericServer {
                 }
             }
         }
-        println!("{:?}", self.network_graph);
     }
 
     pub(crate) fn update_network_from_header(&mut self, srch: &SourceRoutingHeader) {
