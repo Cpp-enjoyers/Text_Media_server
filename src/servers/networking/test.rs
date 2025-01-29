@@ -501,7 +501,7 @@ mod networking_tests {
             server2.run();
         });
 
-        server1.flood();
+        server1.run();
         while let Ok(p) = server1.packet_recv.recv_timeout(Duration::from_secs(10)) {
             match p.pack_type {
                 PacketType::FloodResponse(_) | PacketType::FloodRequest(_) => {

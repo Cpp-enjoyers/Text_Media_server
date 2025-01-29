@@ -39,7 +39,7 @@ impl GenericServer {
         Ok(fs::read_dir(path)?
             .filter(Result::is_ok)
             .map(|p| p.unwrap().path())
-            .filter(|p| p.is_dir())
+            .filter(|p| p.is_file())
             .map(|p| p.into_os_string().into_string().unwrap())
             .collect())
     }
