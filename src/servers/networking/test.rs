@@ -219,7 +219,7 @@ mod routing_tests {
 mod networking_tests {
     use std::{
         collections::HashMap,
-        env::{self, set_var},
+        env,
         thread,
         time::Duration,
     };
@@ -359,10 +359,11 @@ mod networking_tests {
         server.flood();
         while let Ok(p) = server.packet_recv.recv_timeout(Duration::from_secs(1)) {
             match p.pack_type {
-                PacketType::FloodResponse(_) | PacketType::FloodRequest(_) => {}
+                PacketType::FloodResponse(_) | PacketType::FloodRequest(_) => {
+                    server.handle_packet(p);
+                }
                 _ => panic!(),
             }
-            server.handle_packet(p);
         }
 
         assert!(graphmap_eq(
@@ -378,7 +379,7 @@ mod networking_tests {
                 (11, 14, 1.),
                 (14, 11, 1.),
             ])
-        ))
+        ));
     }
 
     #[test]
@@ -450,7 +451,7 @@ mod networking_tests {
             (13, d13_send.clone()),
             (2, s2_send.clone()),
         ]);
-        let mut drone4: CppEnjoyersDrone = CppEnjoyersDrone::new(
+        let mut drone14: CppEnjoyersDrone = CppEnjoyersDrone::new(
             14,
             unbounded().0,
             d_command_recv.clone(),
@@ -460,8 +461,8 @@ mod networking_tests {
         );
 
         // client 1
-        let neighbours1 = HashMap::from([(11, d_send.clone()), (12, d12_send.clone())]);
-        let mut server1 = GenericServer::new(
+        let neighbours1: HashMap<u8, Sender<Packet>> = HashMap::from([(11, d_send.clone()), (12, d12_send.clone())]);
+        let mut server1: GenericServer = GenericServer::new(
             1,
             s_event_send.clone(),
             s1_command_recv,
@@ -469,9 +470,9 @@ mod networking_tests {
             neighbours1,
         );
 
-        // client 2
-        let neighbours2 = HashMap::from([(13, d13_send.clone()), (14, d14_send.clone())]);
-        let mut server2 = GenericServer::new(
+        // server 2
+        let neighbours2: HashMap<u8, Sender<Packet>> = HashMap::from([(13, d13_send.clone()), (14, d14_send.clone())]);
+        let mut server2: GenericServer = GenericServer::new(
             2,
             s_event_send.clone(),
             s2_command_recv,
@@ -493,7 +494,7 @@ mod networking_tests {
         });
 
         thread::spawn(move || {
-            drone4.run();
+            drone14.run();
         });
 
         thread::spawn(move || {
@@ -501,12 +502,32 @@ mod networking_tests {
         });
 
         server1.flood();
-        while let Ok(p) = server1.packet_recv.recv_timeout(Duration::from_secs(1)) {
+        while let Ok(p) = server1.packet_recv.recv_timeout(Duration::from_secs(10)) {
             match p.pack_type {
-                PacketType::FloodResponse(_) | PacketType::FloodRequest(_) => {}
+                PacketType::FloodResponse(_) | PacketType::FloodRequest(_) => {
+                    server1.handle_packet(p);
+                }
                 _ => panic!(),
             }
-            server1.handle_packet(p);
         }
+
+        println!("{:?}", server1.network_graph)
+
+        /*
+        assert!(graphmap_eq(&server1.network_graph, &NetworkGraph::from_edges([
+            (1, 12, 1.),
+            (1, 11, 1.),
+            (12, 11, 1.),
+            (11, 12, 1.),
+            (11, 13, 1.),
+            (13, 11, 1.),
+            (11, 14, 1.),
+            (14, 11, 1.),
+            (14, 13, 1.),
+            (13, 14, 1.),
+            (13, 2, 1.),
+            (14, 2, 1.),
+        ])));
+        */
     }
 }

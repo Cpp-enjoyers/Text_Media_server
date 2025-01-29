@@ -17,7 +17,7 @@ impl GenericServer {
 
     pub(crate) fn handle_ack(&mut self, sid: u64, _ack: &Ack) {
         self.sent_history.remove(&sid).map_or_else(
-            || warn!("Received unknow sid in Ack msg: {sid}"),
+            || warn!(target: &self.target_topic, "Received unknow sid in Ack msg: {sid}"),
             |_| info!("Sid: {sid} acknoledged"),
         );
     }
@@ -41,7 +41,7 @@ impl GenericServer {
             let (src_id, i, sz, frag) = *t;
             self.resend_packet(sid, src_id, i, sz, frag);
         } else {
-            warn!("Received Nack with unknown sid: {sid}");
+            warn!(target: &self.target_topic, "Received Nack with unknown sid: {sid}");
         }
 
         self.need_flood = true;
@@ -63,7 +63,7 @@ impl GenericServer {
                     vec![[0; FRAGMENT_DSIZE]; frag.total_n_fragments as usize],
                 ));
             entry.1.get_mut(frag.fragment_index as usize).map_or_else(
-                || warn!("Received fragment with invalid index"),
+                || warn!(target: &self.target_topic, "Received fragment with invalid index"),
                 |v: &mut [u8; FRAGMENT_DSIZE]| {
                     entry.0 += 1;
                     *v = frag.data;
@@ -77,7 +77,7 @@ impl GenericServer {
             }
             self.send_ack(srch, srch.hops[0], sid, frag.fragment_index);
         } else {
-            error!("Received fragment with invalid source routing header!");
+            error!(target: &self.target_topic, "Received fragment with invalid source routing header!");
         }
     }
 
@@ -95,7 +95,7 @@ impl GenericServer {
         info!("Sending ack {ack}, receiving route: {srch}");
 
         if ack.routing_header.len() < 2 {
-            error!(
+            error!(target: &self.target_topic, 
                 "Error, srch of response ack: {}. Dropping response",
                 ack.routing_header
             );
@@ -106,7 +106,7 @@ impl GenericServer {
             let _ = c.send(ack.clone());
             let _ = self.controller_send.send(ServerEvent::PacketSent(ack));
         } else {
-            warn!("Can't find Ack route, shortcutting");
+            warn!(target: &self.target_topic, "Can't find Ack route, shortcutting");
             let _ = self.controller_send.send(ServerEvent::ShortCut(ack));
         }
     }

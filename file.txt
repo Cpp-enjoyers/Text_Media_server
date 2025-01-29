@@ -1,0 +1,116 @@
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Drone started
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]] Drone started
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]] Drone started
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Drone started
+[2025-01-29T16:25:04Z INFO  servers::servers] Starting new flood request to construct network
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (12, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (13, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (12, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (13, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Generated flood response: Packet(0) { routing_header: [ (12)-> 11 -> 1 ], pack_type FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (12, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Generated flood response: Packet(0) { routing_header: [ (11)-> 12 -> 1 ], pack_type FloodResponse { flood_id: 0, path_trace: [(1, Server), (12, Drone), (11, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Logging and sending flood response to: 11
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and sending flood response to: 12
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone), (14, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone), (13, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone), (13, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 1, hops: [11, 12, 1] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(1, Server), (12, Drone), (11, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone), (14, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Logging and sending flood response to: 1
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone), (11, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (13, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  servers::servers] Received flood response FloodResponse { flood_id: 0, path_trace: [(1, Server), (12, Drone), (11, Drone)] }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone), (11, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Generated flood response: Packet(0) { routing_header: [ (13)-> 14 -> 2 ], pack_type FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (13, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Generated flood response: Packet(0) { routing_header: [ (14)-> 13 -> 2 ], pack_type FloodResponse { flood_id: 0, path_trace: [(2, Server), (13, Drone), (14, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and sending flood response to: 14
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and sending flood response to: 13
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone), (11, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone), (11, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone), (13, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 1, path_trace: [(1, Server), (11, Drone), (14, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  servers::servers] Received flood request FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone), (11, Drone)] }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (13, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  servers::servers] Flood request handled properly
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Generated flood response: Packet(0) { routing_header: [ (14)-> 13 -> 11 -> 1 ], pack_type FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (13, Drone), (14, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Logging and forwarding flood request: Packet(0) { routing_header: [  ], pack_type FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone), (11, Drone), (12, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and sending flood response to: 13
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Generated flood response: Packet(0) { routing_header: [ (13)-> 14 -> 11 -> 1 ], pack_type FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (14, Drone), (13, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Generated flood response: Packet(0) { routing_header: [ (11)-> 13 -> 2 ], pack_type FloodResponse { flood_id: 0, path_trace: [(2, Server), (13, Drone), (11, Drone)] } }
+[2025-01-29T16:25:04Z INFO  servers::servers] Received flood request FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone), (11, Drone), (12, Drone)] }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and sending flood response to: 14
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and sending flood response to: 13
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 1, hops: [13, 14, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (13, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone), (11, Drone), (1, Server)] }) }
+[2025-01-29T16:25:04Z INFO  servers::servers] Flood request handled properly
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and sending flood response to: 2
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 1, hops: [12, 11, 1] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (12, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 0, hops: [] }, session_id: 0, pack_type: FloodRequest(FloodRequest { flood_id: 0, initiator_id: 2, path_trace: [(2, Server), (14, Drone), (11, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 1, hops: [13, 14, 11, 1] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (14, Drone), (13, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and sending flood response to: 1
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Handling flood request
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Generated flood response: Packet(0) { routing_header: [ (12)-> 1 -> 11 -> 14 -> 2 ], pack_type FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (1, Server), (12, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and sending flood response to: 11
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Logging and sending flood response to: 1
+[2025-01-29T16:25:04Z INFO  servers::servers] Received flood response FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (12, Drone)] }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Generated flood response: Packet(0) { routing_header: [ (13)-> 11 -> 14 -> 2 ], pack_type FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (13, Drone)] } }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and sending flood response to: 11
+[2025-01-29T16:25:04Z INFO  servers::servers] Received flood response FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (1, Server), (12, Drone)] }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 2, hops: [13, 14, 11, 1] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (14, Drone), (13, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 1, hops: [1, 12, 11, 14, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (12, Drone), (1, Server)] }) }
+[2025-01-29T16:25:04Z INFO  servers::servers::networking] Forwarding flood response
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and sending flood response to: 1
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 1, hops: [14, 13, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (13, Drone), (14, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[12]]    Logging and sending flood response to: 11
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and sending flood response to: 2
+[2025-01-29T16:25:04Z INFO  servers::servers] Received flood response FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (14, Drone), (13, Drone)] }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 1, hops: [13, 11, 14, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (13, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and sending flood response to: 14
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 1, hops: [14, 13, 11, 1] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (13, Drone), (14, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and sending flood response to: 11
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 2, hops: [13, 11, 14, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (13, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and sending flood response to: 2
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 2, hops: [12, 1, 11, 14, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (1, Server), (12, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 1, hops: [11, 13, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (13, Drone), (11, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and sending flood response to: 14
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[13]]    Logging and sending flood response to: 2
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 3, hops: [12, 1, 11, 14, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (1, Server), (12, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and sending flood response to: 2
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 2, hops: [1, 12, 11, 14, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (12, Drone), (1, Server)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and sending flood response to: 14
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 3, hops: [1, 12, 11, 14, 2] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(2, Server), (14, Drone), (11, Drone), (12, Drone), (1, Server)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[14]]    Logging and sending flood response to: 2
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]] Processing packet: Packet { routing_header: SourceRoutingHeader { hop_index: 2, hops: [14, 13, 11, 1] }, session_id: 0, pack_type: FloodResponse(FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (13, Drone), (14, Drone)] }) }
+[2025-01-29T16:25:04Z INFO  CppEnjoyers[11]]    Logging and sending flood response to: 1
+[2025-01-29T16:25:04Z INFO  servers::servers] Received flood response FloodResponse { flood_id: 0, path_trace: [(1, Server), (11, Drone), (13, Drone), (14, Drone)] }
+test servers::networking::test::networking_tests::test_flood_big_topology ... ok

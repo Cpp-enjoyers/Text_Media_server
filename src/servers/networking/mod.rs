@@ -28,7 +28,7 @@ impl Flooder for GenericServer {
     fn has_seen_flood(&self, flood_id: (NodeId, u64)) -> bool {
         self.flood_history
             .get(&flood_id.0)
-            .map_or(false, |r| r.contains(&flood_id.1))
+            .map_or(false, |r: &RingBuffer<u64>| r.contains(&flood_id.1))
     }
 
     fn insert_flood(&mut self, flood_id: (NodeId, u64)) {
@@ -61,32 +61,33 @@ impl GenericServer {
                     srch.increase_hop_index();
                     let packet: Packet = Packet::new_flood_response(srch, sid, fr);
                     if let Some(c) = self.packet_send.get(&next_id) {
-                        info!("Forwarding flood response");
+                        info!(target: &self.target_topic, "Forwarding flood response");
                         let _ = c.send(packet.clone());
                         let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
                     } else {
-                        warn!("Forwarding ill formed (wrong src header) flood response using shortcut");
+                        warn!(target: &self.target_topic, "Forwarding ill formed (wrong src header) flood response using shortcut");
                         let _ = self.controller_send.send(ServerEvent::ShortCut(packet));
                     }
                 }
                 None => {
-                    error!("Received flood response with invalid header: {srch}");
+                    error!(target: &self.target_topic, "Received flood response with invalid header: {srch}");
                 }
             },
             None => {
-                error!("Found flood response with empty source routing header, ignoring...");
+                error!(target: &self.target_topic, "Found flood response with empty source routing header, ignoring...");
             }
         }
     }
 
     pub(crate) fn flood(&mut self) {
-        let flood = Packet::new_flood_request(
+        let flood: Packet = Packet::new_flood_request(
             SourceRoutingHeader::empty_route(),
             0,
             FloodRequest::initialize(self.session_id, self.id, NodeType::Server),
         );
         self.session_id = (self.session_id + 1) & SID_MASK;
-        for c in self.packet_send.values() {
+        for (id, c) in self.packet_send.iter() {
+            info!(target: &self.target_topic, "Sending flood request to {id}");
             let _ = c.send(flood.clone());
         }
         let _ = self.controller_send.send(ServerEvent::PacketSent(flood));

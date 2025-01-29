@@ -36,6 +36,7 @@ const RID_MASK: u64 = 0xFFFF;
 
 pub struct GenericServer {
     id: NodeId,
+    target_topic: String,
     session_id: u64, // wraps around 48 bits
     need_flood: bool,
     graph_updated: bool,
@@ -56,27 +57,27 @@ impl GenericServer {
         let sid: u64 = packet.session_id;
         match packet.pack_type {
             PacketType::MsgFragment(frag) => {
-                info!("Received message fragment {frag}");
+                info!(target: &self.target_topic, "Received message fragment {frag}");
                 self.handle_fragment(&srch, sid, &frag);
             }
             PacketType::Ack(ack) => {
-                info!("Received ack {ack}");
+                info!(target: &self.target_topic, "Received ack {ack}");
                 self.handle_ack(sid, &ack);
             }
             PacketType::Nack(nack) => {
-                info!("Received nack {nack}");
+                info!(target: &self.target_topic, "Received nack {nack}");
                 self.handle_nack(sid, &nack);
             }
             PacketType::FloodRequest(mut fr) => {
-                info!("Received flood request {fr}");
+                info!(target: &self.target_topic, "Received flood request {fr}");
                 if let Ok(()) = self.handle_flood_request(&srch, sid, &mut fr) {
-                    info!("Flood request handled properly");
+                    info!(target: &self.target_topic, "Flood request handled properly");
                 } else {
-                    warn!("Error during flood request handling, dropping packet");
+                    warn!(target: &self.target_topic, "Error during flood request handling, dropping packet");
                 }
             }
             PacketType::FloodResponse(fr) => {
-                info!("Received flood response {fr}");
+                info!(target: &self.target_topic, "Received flood response {fr}");
                 self.handle_flood_response(srch, sid, fr);
             }
         }
@@ -88,15 +89,15 @@ impl GenericServer {
                 self.packet_send.insert(node_id, channel);
                 self.network_graph.add_edge(self.id, node_id, 1.);
                 self.network_graph.add_edge(node_id, self.id, 1.);
-                info!("Received add sender command, sender id: {node_id}");
+                info!(target: &self.target_topic, "Received add sender command, sender id: {node_id}");
             }
             ServerCommand::RemoveSender(node_id) => {
                 self.packet_send.remove(&node_id);
                 self.network_graph.remove_node(node_id);
-                info!("Received remove sender command, sender id: {node_id}");
+                info!(target: &self.target_topic, "Received remove sender command, sender id: {node_id}");
             }
             ServerCommand::Shortcut(p) => {
-                info!("Received packet {p} from controller shortcut");
+                info!(target: &self.target_topic, "Received packet {p} from controller shortcut");
                 self.handle_packet(p);
             }
         }
@@ -122,6 +123,7 @@ impl Server for GenericServer {
 
         GenericServer {
             id,
+            target_topic: format!("Server[{id}]"),
             session_id: 0,
             need_flood: true,
             graph_updated: false,
@@ -140,11 +142,11 @@ impl Server for GenericServer {
     fn run(&mut self) {
         loop {
             if self.need_flood {
-                info!("Starting new flood request to construct network");
+                info!(target: &self.target_topic, "Starting new flood request to construct network");
                 self.flood();
             } else if self.graph_updated && !self.pending_packets.is_empty() {
                 if let Some(sid) = self.pending_packets.pop_back() {
-                    info!("Trying to resend packet with sid: {sid}");
+                    info!(target: &self.target_topic, "Trying to resend packet with sid: {sid}");
                     let fragment: Option<&(u8, u64, u64, [u8; FRAGMENT_DSIZE])> =
                         self.sent_history.get(&sid);
 

@@ -87,7 +87,7 @@ impl GenericServer {
             }
             self.send_response(srch, src_id, rid, &resp);
         } else {
-            error!("Received undeserializable request, ignoring message");
+            error!(target: &self.target_topic, "Received undeserializable request, ignoring message");
         }
         // self.session_id = (self.session_id + 1) & SID_MASK;
     }
@@ -102,7 +102,7 @@ impl GenericServer {
         let mut resp_hdr: SourceRoutingHeader = self.get_routing_hdr_with_hint(srch, src_id);
 
         if resp_hdr.len() < 2 {
-            error!("Error, srch of response inconsistent: {resp_hdr}. Dropping response");
+            error!(target: &self.target_topic, "Error, srch of response inconsistent: {resp_hdr}. Dropping response");
             return;
         }
 
@@ -111,7 +111,7 @@ impl GenericServer {
         if let Ok(data) = resp.serialize() {
             serialized = Self::compress(data, &resp.compression_type).map(fragment_response);
         } else {
-            error!("Cannot serialize response {resp:?}, dropping response");
+            error!(target: &self.target_topic, "Cannot serialize response {resp:?}, dropping response");
             return;
         }
 
@@ -141,11 +141,11 @@ impl GenericServer {
                         self.session_id = (self.session_id + 1) & SID_MASK;
                         self.pending_packets.push_back(sid);
                     }
-                    error!("Unable to find channel of designated nbr! pending response...");
+                    error!(target: &self.target_topic, "Unable to find channel of designated nbr! pending response...");
                 }
             }
             Err(_) => {
-                error!(target: "CRITICAL", "Error during serialization of reponse, dropping response");
+                error!(target: &self.target_topic, "CRITICAL: Error during serialization of reponse, dropping response");
             }
         }
     }
@@ -168,7 +168,7 @@ impl GenericServer {
                 .get(&packet.routing_header.hops[1])
                 .map_or_else(
                     || {
-                        error!(target: "CRITICAL","Unable to find channel of designated nbr!, putting in queue!");
+                        error!(target: &self.target_topic, "CRITICAL: Unable to find channel of designated nbr!, putting in queue!");
                         self.graph_updated = false;
                         self.pending_packets.push_back(sid);
                     },
@@ -178,7 +178,7 @@ impl GenericServer {
                     },
                 );
         } else {
-            warn!("Failed to resend packet with sid: {sid}");
+            warn!(target: &self.target_topic, "Failed to resend packet with sid: {sid}");
             self.graph_updated = false;
             self.pending_packets.push_back(sid);
         }

@@ -17,7 +17,6 @@ impl GenericServer {
     }
 
     pub(crate) fn update_network_from_flood(&mut self, fr: &FloodResponse) {
-        info!("Updating routing info received from flood response");
         for ((prev_id, prev_type), (next_id, next_type)) in fr.path_trace.iter().tuple_windows() {
             match (prev_type, next_type) {
                 (NodeType::Drone, NodeType::Drone) => {
@@ -35,7 +34,7 @@ impl GenericServer {
                     }
                 }
                 (_, _) => {
-                    error!("Found a Client/Server connected to another Client/Server in flood response: {fr}");
+                    error!(target: &self.target_topic, "Found a Client/Server connected to another Client/Server in flood response: {fr}");
                 }
             }
         }
@@ -45,7 +44,7 @@ impl GenericServer {
         info!("Updating routing info from source routing header");
         let sz: usize = srch.hops.len();
         if sz < 3 {
-            error!("Found wrong src header o client/server directly connected: {srch}");
+            error!(target: &self.target_topic, "Found wrong src header o client/server directly connected: {srch}");
             return;
         }
         for (prev_id, next_id) in srch.hops[1..srch.hops.len() - 1].iter().tuple_windows() {
