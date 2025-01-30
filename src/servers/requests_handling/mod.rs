@@ -113,10 +113,9 @@ impl GenericServer {
         resp_hdr.increase_hop_index();
         let serialized: Result<Vec<[u8; FRAGMENT_DSIZE]>, String>;
         if let Ok(data) = resp.serialize() {
-            info!("Serialized response: {data:?}");
-            info!("{:?}", Self::compress(data.clone(), &resp.compression_type));
+            info!(target: &self.target_topic, "Serialized response: {data:?}");
             serialized = Self::compress(data, &resp.compression_type).map(fragment_response);
-            info!("Compressed data: {serialized:?}");
+            info!(target: &self.target_topic, "Compressed data: {serialized:?}");
         } else {
             error!(target: &self.target_topic, "Cannot serialize response {resp:?}, dropping response");
             return;

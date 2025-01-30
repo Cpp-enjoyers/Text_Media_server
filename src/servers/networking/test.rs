@@ -112,7 +112,7 @@ mod routing_tests {
             (4, NodeType::Client),
         ];
         server.update_network_from_flood(&fr);
-        let mut res = NetworkGraph::from_edges([
+        let mut res: NetworkGraph = NetworkGraph::from_edges([
             (0, 1, 1.),
             (1, 2, 1.),
             (2, 1, 1.),
@@ -204,11 +204,11 @@ mod networking_tests {
 
     use ap2024_unitn_cppenjoyers_drone::CppEnjoyersDrone;
     use common::{networking::flooder::Flooder, slc_commands::ServerEvent, Server};
-    use crossbeam_channel::{unbounded, Sender};
+    use crossbeam_channel::{unbounded, RecvError, Sender};
     use wg_2024::{
         drone::Drone,
         network::{NodeId, SourceRoutingHeader},
-        packet::{Packet, PacketType},
+        packet::{FloodResponse, NodeType, Packet, PacketType},
     };
 
     use crate::servers::{networking::test::graphmap_eq, GenericServer, NetworkGraph};
@@ -217,7 +217,7 @@ mod networking_tests {
 
     #[test]
     fn test_flood_buffer() {
-        let mut server = get_dummy_server();
+        let mut server: GenericServer = get_dummy_server();
         assert!(!server.has_seen_flood((1, 64)));
         server.insert_flood((0, 0));
         assert!(server.has_seen_flood((0, 0)));
@@ -239,6 +239,46 @@ mod networking_tests {
         server.send_to_controller(dummy_pkt.clone());
         assert!(ctrl_recv_ev.recv().unwrap() == ServerEvent::PacketSent(dummy_pkt));
         assert!(ctrl_recv_ev.recv_timeout(Duration::from_secs(1)).is_err());
+    }
+
+    #[test]
+    fn test_handle_my_flood_response() {
+        let mut server: GenericServer = get_dummy_server();
+        let response: FloodResponse = FloodResponse { flood_id: 0, path_trace: vec![(0, NodeType::Server), (1, NodeType::Drone), (2, NodeType::Client)] };
+        server.handle_flood_response(SourceRoutingHeader::new(vec![2, 1, 0], 2), 0, response);
+        assert!(graphmap_eq(&server.network_graph, &NetworkGraph::from_edges([
+            (0, 1, 1.),
+            (1, 2, 1.),
+        ])));
+    }
+
+    #[test]
+    fn test_handle_flood_response() {
+        let mut server: GenericServer = get_dummy_server();
+        let response: FloodResponse = FloodResponse { flood_id: 0, path_trace: vec![(2, NodeType::Client), (1, NodeType::Drone), (0, NodeType::Server), (3, NodeType::Drone)] };
+        let (ds, dr) = crossbeam_channel::unbounded();
+        server.packet_send.insert(1, ds.clone());
+        server.handle_flood_response(SourceRoutingHeader::new(vec![3, 0, 1, 2], 1), 0, response);
+        let data:Result<Packet, RecvError> = dr.recv();
+        assert!(data.is_ok());
+        let packet: Packet = data.unwrap();
+        assert!(packet.routing_header.hop_index == 2);
+    }
+
+    #[test]
+    fn test_handle_flood_response_to_scl() {
+        let mut server: GenericServer = get_dummy_server();
+        let response: FloodResponse = FloodResponse { flood_id: 0, path_trace: vec![(2, NodeType::Client), (1, NodeType::Drone), (0, NodeType::Server), (3, NodeType::Drone)] };
+        let (scls, sclr) = crossbeam_channel::unbounded();
+        server.controller_send = scls.clone();
+        server.handle_flood_response(SourceRoutingHeader::new(vec![3, 0, 1, 2], 1), 0, response);
+        let data:Result<ServerEvent, RecvError>  = sclr.recv();
+        assert!(data.is_ok());
+        let packet: ServerEvent = data.unwrap();
+        match packet {
+            ServerEvent::ShortCut(p) => assert!(p.routing_header.hop_index == 2),
+            _ => panic!(),
+        }
     }
 
     #[test]
@@ -308,8 +348,8 @@ mod networking_tests {
         );
 
         // server
-        let neighbors_s = HashMap::from([(11, d_send.clone())]);
-        let mut server = GenericServer::new(
+        let neighbors_s: HashMap<u8, Sender<Packet>> = HashMap::from([(11, d_send.clone())]);
+        let mut server: GenericServer = GenericServer::new(
             1,
             s_event_send.clone(),
             s_command_recv,
@@ -508,5 +548,9 @@ mod networking_tests {
                 (14, 2, 1.),
             ])
         ));
+    }
+
+    fn test_flood_server_isolated_by_nack() {
+        
     }
 }
