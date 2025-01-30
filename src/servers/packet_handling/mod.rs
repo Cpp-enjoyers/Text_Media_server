@@ -35,7 +35,10 @@ impl GenericServer {
             NackType::ErrorInRouting(id) => {
                 self.network_graph.remove_node(id);
             }
-            _ => {}
+            NackType::DestinationIsDrone => {
+                error!(target: &self.target_topic, "CRITICAL: sent a message with drone as destination?");
+            }
+            NackType::UnexpectedRecipient(_) => {}
         }
 
         let fragment: Option<&(u8, u64, u64, [u8; FRAGMENT_DSIZE])> = self.sent_history.get(&sid);

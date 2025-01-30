@@ -19,6 +19,9 @@ use super::{
     GenericServer, SID_MASK,
 };
 
+#[cfg(test)]
+mod test;
+
 impl GenericServer {
     #[inline]
     fn generate_response_id(sid: u64, rid: u16) -> u64 {
@@ -28,7 +31,7 @@ impl GenericServer {
     fn compress(data: Vec<u8>, comp: &Compression) -> Result<Vec<u8>, String> {
         match comp {
             Compression::LZW => LZWCompressor::new()
-                .compress(data)
+                .compress(data)?
                 .serialize()
                 .map_err(|_| "Error during compression".to_string()),
             Compression::None => BypassCompressor::new().compress(data),
@@ -110,7 +113,10 @@ impl GenericServer {
         resp_hdr.increase_hop_index();
         let serialized: Result<Vec<[u8; FRAGMENT_DSIZE]>, String>;
         if let Ok(data) = resp.serialize() {
+            info!("Serialized response: {data:?}");
+            info!("{:?}", Self::compress(data.clone(), &resp.compression_type));
             serialized = Self::compress(data, &resp.compression_type).map(fragment_response);
+            info!("Compressed data: {serialized:?}");
         } else {
             error!(target: &self.target_topic, "Cannot serialize response {resp:?}, dropping response");
             return;
@@ -185,30 +191,3 @@ impl GenericServer {
         }
     }
 }
-
-/*
-#[test]
-fn dummy_test() {
-    let resp = ResponseMessage::new_text_list_response(
-        0,
-        Compression::LZW,
-        GenericServer::list_dir("./public/").unwrap_or_default(),
-    );
-    println!("{resp:?}")
-}
- */
-/*
-#[test]
-    fn dummy_test() {
-        env::set_var("RUST_LOG", "info");
-        env_logger::try_init();
-
-        let mut server: GenericServer = get_dummy_server();
-        let mut v = Vec::new();
-        v.resize(128, 0);
-        v[0] = 2;
-        v[2] = 1;
-        let pkt: Packet = Packet::new_fragment(SourceRoutingHeader::new(vec![2, 9, 3], 2), 0, Fragment::new(0, 1, v.try_into().unwrap()));
-        server.handle_packet(pkt);
-    }
- */

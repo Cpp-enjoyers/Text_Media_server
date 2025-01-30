@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod serialization_tests {
     use common::web_messages::{Compression, RequestMessage, ResponseMessage, Serializable};
 
     use crate::servers::serialization::{defragment_deserialize_request, fragment_response};
