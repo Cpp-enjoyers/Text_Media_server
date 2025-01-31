@@ -1,5 +1,5 @@
 use std::{
-    fs::{self, read_to_string},
+    fs::{self, read},
     io,
 };
 
@@ -74,7 +74,7 @@ impl GenericServer {
                         );
                     }
                     TextRequest::Text(str) => {
-                        resp = if let Ok(data) = read_to_string(str) {
+                        resp = if let Ok(data) = read(str) {
                             ResponseMessage::new_text_response(self.id, req.compression_type, data)
                         } else {
                             ResponseMessage::new_not_found_response(self.id, req.compression_type)

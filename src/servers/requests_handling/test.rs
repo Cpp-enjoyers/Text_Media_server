@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod request_tests {
-    use std::{fs::read_to_string, time::Duration, vec};
+    use std::{fs::read, time::Duration, vec};
 
     use common::{
         slc_commands::ServerType,
@@ -99,7 +99,7 @@ mod request_tests {
         let response: ResponseMessage = ResponseMessage::new_text_response(
             0,
             Compression::LZW,
-            read_to_string("./public/file.html").unwrap(),
+            read("./public/file.html").unwrap(),
         );
         test_handle_request(request, response);
     }

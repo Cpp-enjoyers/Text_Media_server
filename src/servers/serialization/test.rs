@@ -63,7 +63,7 @@ mod serialization_tests {
                 .to_string();
 
         let resp: ResponseMessage =
-            ResponseMessage::new_text_response(0, Compression::None, file_data);
+            ResponseMessage::new_text_response(0, Compression::None, file_data.as_bytes().to_vec());
         let serialization: Vec<u8> = resp.serialize().unwrap();
         let fragmented: Vec<[u8; 128]> = fragment_response(serialization);
         // let real_sz = (fragmented.len() - 1) * 128 + sz as usize;
