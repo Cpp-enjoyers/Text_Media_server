@@ -203,7 +203,11 @@ mod networking_tests {
     use std::{collections::HashMap, thread, time::Duration};
 
     use ap2024_unitn_cppenjoyers_drone::CppEnjoyersDrone;
-    use common::{networking::flooder::Flooder, slc_commands::{ServerCommand, ServerEvent}, Server};
+    use common::{
+        networking::flooder::Flooder,
+        slc_commands::{ServerCommand, ServerEvent},
+        Server,
+    };
     use crossbeam_channel::{unbounded, RecvError, Sender};
     use wg_2024::{
         drone::Drone,
@@ -576,20 +580,25 @@ mod networking_tests {
     #[test]
     fn test_flood_server_isolated() {
         let mut server: GenericServer = get_dummy_server();
-        server.sent_history.insert(0, (2, 0, 1, [0;128]));
+        server.sent_history.insert(0, (2, 0, 1, [0; 128]));
         let (ds, dr) = crossbeam_channel::unbounded();
         let (ss, sr) = crossbeam_channel::unbounded();
         let (_, ctrlr) = crossbeam_channel::unbounded();
         server.controller_recv = ctrlr.clone();
-        let nack: Nack = Nack { fragment_index: 0, nack_type: NackType::Dropped };
+        let nack: Nack = Nack {
+            fragment_index: 0,
+            nack_type: NackType::Dropped,
+        };
         server.handle_nack(0, &nack);
         assert!(server.need_flood);
         server.flood();
         assert!(!server.need_flood);
         server.packet_recv = sr.clone();
-        assert!(graphmap_eq(&server.network_graph, &NetworkGraph::from_edges::<[(u8, u8, f64); 0]>([])));
-        let neighbours1: HashMap<u8, Sender<Packet>> =
-            HashMap::from([(0, ss.clone())]);
+        assert!(graphmap_eq(
+            &server.network_graph,
+            &NetworkGraph::from_edges::<[(u8, u8, f64); 0]>([])
+        ));
+        let neighbours1: HashMap<u8, Sender<Packet>> = HashMap::from([(0, ss.clone())]);
         let mut drone14: CppEnjoyersDrone = CppEnjoyersDrone::new(
             1,
             unbounded().0,
@@ -597,13 +606,17 @@ mod networking_tests {
             dr.clone(),
             neighbours1,
             0.0,
-        );   
+        );
         server.network_graph.add_edge(1, 2, 1.);
-        thread::spawn(move || { drone14.run(); });
+        thread::spawn(move || {
+            drone14.run();
+        });
         let cmd: ServerCommand = ServerCommand::AddSender(1, ds.clone());
         server.handle_command(cmd);
         assert!(server.need_flood);
-        thread::spawn(move || { server.run(); });
+        thread::spawn(move || {
+            server.run();
+        });
         if let Ok(p) = dr.recv() {
             assert!(p.session_id == 0);
         } else {

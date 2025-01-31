@@ -40,19 +40,19 @@ mod request_tests {
         assert!(server.fragment_history.is_empty());
         assert!(!server.sent_history.is_empty());
         let mut acks: u64 = 0;
-        let mut frags: u64 = 0;
+        let mut _frags: u64 = 0;
         let mut v: Vec<[u8; 128]> = Vec::new();
         while let Ok(p) = dr.recv_timeout(Duration::from_secs(1)) {
             match p.pack_type {
                 PacketType::Ack(_) => acks += 1,
                 PacketType::MsgFragment(f) => {
                     v.push(f.data);
-                    frags += 1;
+                    _frags += 1;
                 }
                 _ => panic!(),
             }
         }
-        assert!(acks == frags);
+        assert!(acks == total);
         let v: Vec<u16> = Vec::deserialize(v.into_flattened()).unwrap();
         let data: Vec<u8> = LZWCompressor::new().decompress(v).unwrap();
         let resp: ResponseMessage = ResponseMessage::deserialize(data).unwrap();
@@ -70,7 +70,7 @@ mod request_tests {
     #[test]
     fn list_dir_test() {
         let l: Vec<String> = GenericServer::list_dir("./public/").unwrap_or_default();
-        assert!(l == vec!["./public/file.txt".to_string()]);
+        assert!(l == vec!["./public/file.html".to_string()]);
     }
 
     #[test]
@@ -95,11 +95,11 @@ mod request_tests {
     #[test]
     fn test_handle_file_request() {
         let request: RequestMessage =
-            RequestMessage::new_text_request(1, Compression::LZW, "./public/file.txt".to_string());
+            RequestMessage::new_text_request(1, Compression::LZW, "./public/file.html".to_string());
         let response: ResponseMessage = ResponseMessage::new_text_response(
             0,
             Compression::LZW,
-            read_to_string("./public/file.txt").unwrap(),
+            read_to_string("./public/file.html").unwrap(),
         );
         test_handle_request(request, response);
     }
