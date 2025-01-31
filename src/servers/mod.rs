@@ -29,7 +29,9 @@ mod test;
 #[cfg(test)]
 mod test_utils;
 
+// maps (SenderId, rid) -> (#recv_fragments, fragments)
 type FragmentHistory = HashMap<(NodeId, u16), (u64, Vec<[u8; FRAGMENT_DSIZE]>)>;
+// maps sid -> (ReceiverId, frag_idx, #tot_frags, frag)
 type MessageHistory = HashMap<u64, (NodeId, u64, u64, [u8; FRAGMENT_DSIZE])>;
 type FloodHistory = HashMap<NodeId, RingBuffer<u64>>;
 type NetworkGraph = DiGraphMap<NodeId, f64>;
