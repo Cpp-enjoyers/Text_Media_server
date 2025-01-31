@@ -25,9 +25,9 @@ mod packet_handling;
 mod requests_handling;
 mod serialization;
 #[cfg(test)]
-mod test_utils;
-#[cfg(test)]
 mod test;
+#[cfg(test)]
+mod test_utils;
 
 type FragmentHistory = HashMap<(NodeId, u16), (u64, Vec<[u8; FRAGMENT_DSIZE]>)>;
 type MessageHistory = HashMap<u64, (NodeId, u64, u64, [u8; FRAGMENT_DSIZE])>;
@@ -93,11 +93,13 @@ impl GenericServer {
                 self.packet_send.insert(node_id, channel);
                 self.network_graph.add_edge(self.id, node_id, 1.);
                 self.network_graph.add_edge(node_id, self.id, 1.);
+                self.need_flood = true;
                 info!(target: &self.target_topic, "Received add sender command, sender id: {node_id}");
             }
             ServerCommand::RemoveSender(node_id) => {
                 self.packet_send.remove(&node_id);
                 self.network_graph.remove_node(node_id);
+                self.need_flood = true;
                 info!(target: &self.target_topic, "Received remove sender command, sender id: {node_id}");
             }
             ServerCommand::Shortcut(p) => {

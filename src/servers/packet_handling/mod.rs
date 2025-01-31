@@ -34,11 +34,14 @@ impl GenericServer {
             }
             NackType::ErrorInRouting(id) => {
                 self.network_graph.remove_node(id);
+                self.need_flood = true;
             }
             NackType::DestinationIsDrone => {
                 error!(target: &self.target_topic, "CRITICAL: sent a message with drone as destination?");
             }
-            NackType::UnexpectedRecipient(_) => {}
+            NackType::UnexpectedRecipient(_) => {
+                warn!(target: &self.target_topic, "Care, a drone reported unexpected recipient?");
+            }
         }
 
         let fragment: Option<&(u8, u64, u64, [u8; FRAGMENT_DSIZE])> = self.sent_history.get(&sid);
@@ -49,8 +52,6 @@ impl GenericServer {
         } else {
             warn!(target: &self.target_topic, "Received Nack with unknown sid: {sid}");
         }
-
-        self.need_flood = true;
     }
 
     #[allow(clippy::cast_possible_truncation)]

@@ -244,22 +244,37 @@ mod networking_tests {
     #[test]
     fn test_handle_my_flood_response() {
         let mut server: GenericServer = get_dummy_server();
-        let response: FloodResponse = FloodResponse { flood_id: 0, path_trace: vec![(0, NodeType::Server), (1, NodeType::Drone), (2, NodeType::Client)] };
+        let response: FloodResponse = FloodResponse {
+            flood_id: 0,
+            path_trace: vec![
+                (0, NodeType::Server),
+                (1, NodeType::Drone),
+                (2, NodeType::Client),
+            ],
+        };
         server.handle_flood_response(SourceRoutingHeader::new(vec![2, 1, 0], 2), 0, response);
-        assert!(graphmap_eq(&server.network_graph, &NetworkGraph::from_edges([
-            (0, 1, 1.),
-            (1, 2, 1.),
-        ])));
+        assert!(graphmap_eq(
+            &server.network_graph,
+            &NetworkGraph::from_edges([(0, 1, 1.), (1, 2, 1.),])
+        ));
     }
 
     #[test]
     fn test_handle_flood_response() {
         let mut server: GenericServer = get_dummy_server();
-        let response: FloodResponse = FloodResponse { flood_id: 0, path_trace: vec![(2, NodeType::Client), (1, NodeType::Drone), (0, NodeType::Server), (3, NodeType::Drone)] };
+        let response: FloodResponse = FloodResponse {
+            flood_id: 0,
+            path_trace: vec![
+                (2, NodeType::Client),
+                (1, NodeType::Drone),
+                (0, NodeType::Server),
+                (3, NodeType::Drone),
+            ],
+        };
         let (ds, dr) = crossbeam_channel::unbounded();
         server.packet_send.insert(1, ds.clone());
         server.handle_flood_response(SourceRoutingHeader::new(vec![3, 0, 1, 2], 1), 0, response);
-        let data:Result<Packet, RecvError> = dr.recv();
+        let data: Result<Packet, RecvError> = dr.recv();
         assert!(data.is_ok());
         let packet: Packet = data.unwrap();
         assert!(packet.routing_header.hop_index == 2);
@@ -268,11 +283,19 @@ mod networking_tests {
     #[test]
     fn test_handle_flood_response_to_scl() {
         let mut server: GenericServer = get_dummy_server();
-        let response: FloodResponse = FloodResponse { flood_id: 0, path_trace: vec![(2, NodeType::Client), (1, NodeType::Drone), (0, NodeType::Server), (3, NodeType::Drone)] };
+        let response: FloodResponse = FloodResponse {
+            flood_id: 0,
+            path_trace: vec![
+                (2, NodeType::Client),
+                (1, NodeType::Drone),
+                (0, NodeType::Server),
+                (3, NodeType::Drone),
+            ],
+        };
         let (scls, sclr) = crossbeam_channel::unbounded();
         server.controller_send = scls.clone();
         server.handle_flood_response(SourceRoutingHeader::new(vec![3, 0, 1, 2], 1), 0, response);
-        let data:Result<ServerEvent, RecvError>  = sclr.recv();
+        let data: Result<ServerEvent, RecvError> = sclr.recv();
         assert!(data.is_ok());
         let packet: ServerEvent = data.unwrap();
         match packet {
@@ -550,7 +573,5 @@ mod networking_tests {
         ));
     }
 
-    fn test_flood_server_isolated_by_nack() {
-        
-    }
+    fn test_flood_server_isolated_by_nack() {}
 }
