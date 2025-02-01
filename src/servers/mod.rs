@@ -45,11 +45,14 @@ const RID_MASK: u64 = 0xFFFF;
 
 pub trait ServerType {}
 
-struct Media {}
-struct Text {}
+pub struct Media {}
+pub struct Text {}
 
 impl ServerType for Media {}
 impl ServerType for Text {}
+
+pub type TextServer = GenericServer<Text>;
+pub type MediaServer = GenericServer<Text>;
 
 pub struct GenericServer<T: ServerType> {
     id: NodeId,
