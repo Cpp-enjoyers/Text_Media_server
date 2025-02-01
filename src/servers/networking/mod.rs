@@ -6,13 +6,13 @@ use wg_2024::{
     packet::{FloodRequest, FloodResponse, NodeType, Packet},
 };
 
-use super::{GenericServer, SID_MASK};
+use super::{GenericServer, ServerType, SID_MASK};
 
 mod routing;
 #[cfg(test)]
 mod test;
 
-impl Flooder for GenericServer {
+impl<T: ServerType> Flooder for GenericServer<T> {
     const NODE_TYPE: NodeType = NodeType::Server;
 
     #[inline]
@@ -44,7 +44,7 @@ impl Flooder for GenericServer {
     }
 }
 
-impl GenericServer {
+impl<T: ServerType> GenericServer<T> {
     pub(crate) fn handle_flood_response(
         &mut self,
         mut srch: SourceRoutingHeader,

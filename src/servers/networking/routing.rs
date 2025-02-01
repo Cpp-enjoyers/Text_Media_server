@@ -6,9 +6,9 @@ use wg_2024::{
     packet::{FloodResponse, NodeType},
 };
 
-use crate::servers::GenericServer;
+use crate::servers::{GenericServer, ServerType};
 
-impl GenericServer {
+impl<T: ServerType> GenericServer<T> {
     // TODO remove if too hard to do ETX
     pub(super) fn check_and_add_edge(&mut self, from: u8, to: u8) -> bool {
         (!self.network_graph.contains_edge(from, to))

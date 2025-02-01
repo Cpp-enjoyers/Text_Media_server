@@ -6,22 +6,22 @@ use wg_2024::{
     packet::{Ack, Fragment, Nack, NackType, Packet, FRAGMENT_DSIZE},
 };
 
-use super::{GenericServer, RID_MASK};
+use super::{GenericServer, ServerType, RID_MASK};
 
 #[cfg(test)]
 mod test;
 
-impl GenericServer {
-    #[inline]
-    pub(super) fn get_rid(sid: u64) -> u16 {
-        // intentional, if shifted by 48 it fits into 16
-        u16::try_from(sid & RID_MASK).unwrap()
-    }
+#[inline]
+fn get_rid(sid: u64) -> u16 {
+    // intentional, if shifted by 48 it fits into 16
+    u16::try_from(sid & RID_MASK).unwrap()
+}
 
+impl<T: ServerType> GenericServer<T> {
     pub(crate) fn handle_ack(&mut self, sid: u64, _ack: &Ack) {
         self.sent_history.remove(&sid).map_or_else(
             || warn!(target: &self.target_topic, "Received unknow sid in Ack msg: {sid}"),
-            |_| info!("Sid: {sid} acknoledged"),
+            |_| info!(target: &self.target_topic, "Sid: {sid} acknoledged"),
         );
     }
 
@@ -61,7 +61,7 @@ impl GenericServer {
         sid: u64,
         frag: &Fragment,
     ) {
-        let rid: u16 = Self::get_rid(sid);
+        let rid: u16 = get_rid(sid);
         if let Some(&id) = srch.hops.first() {
             let entry: &mut (u64, Vec<[u8; FRAGMENT_DSIZE]>) =
                 self.fragment_history.entry((id, rid)).or_insert((
@@ -77,7 +77,7 @@ impl GenericServer {
                 },
             );
             if entry.0 == frag.total_n_fragments {
-                info!("All fragments received, reconstructing request {rid}");
+                info!(target: &self.target_topic, "All fragments received, reconstructing request {rid}");
                 let data: Vec<[u8; FRAGMENT_DSIZE]> =
                     self.fragment_history.remove(&(id, rid)).unwrap().1;
                 self.handle_request(srch, id, rid, data);
@@ -99,7 +99,7 @@ impl GenericServer {
         hdr.increase_hop_index();
         let ack: Packet = Packet::new_ack(hdr, sid, frag_idx);
 
-        info!("Sending ack {ack}, receiving route: {srch}");
+        info!(target: &self.target_topic, "Sending ack {ack}, receiving route: {srch}");
 
         if ack.routing_header.len() < 2 {
             error!(target: &self.target_topic,

@@ -1,10 +1,13 @@
 /*
  * TODOS: ETX with packet count + exponentially moving average
  *        Cache shortest paths (this conflicts with ETX tho)
- *        Multithreading
+ *        Multithreading?
  */
 
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    marker::PhantomData,
+};
 
 use common::{
     networking::flooder::Flooder,
@@ -40,7 +43,15 @@ type PendingQueue = VecDeque<u64>;
 const SID_MASK: u64 = 0xFFFF_FFFF_FFFF;
 const RID_MASK: u64 = 0xFFFF;
 
-pub struct GenericServer {
+pub trait ServerType {}
+
+struct Media {}
+struct Text {}
+
+impl ServerType for Media {}
+impl ServerType for Text {}
+
+pub struct GenericServer<T: ServerType> {
     id: NodeId,
     target_topic: String,
     session_id: u64, // wraps around 48 bits
@@ -55,9 +66,10 @@ pub struct GenericServer {
     sent_history: MessageHistory,
     network_graph: NetworkGraph,
     pending_packets: PendingQueue,
+    _marker: PhantomData<T>,
 }
 
-impl GenericServer {
+impl<T: ServerType> GenericServer<T> {
     fn handle_packet(&mut self, packet: Packet) {
         let srch: SourceRoutingHeader = packet.routing_header;
         let sid: u64 = packet.session_id;
@@ -112,7 +124,7 @@ impl GenericServer {
     }
 }
 
-impl Server for GenericServer {
+impl<T: ServerType> Server for GenericServer<T> {
     fn new(
         id: NodeId,
         controller_send: Sender<ServerEvent>,
@@ -144,6 +156,7 @@ impl Server for GenericServer {
             sent_history: HashMap::new(),
             network_graph,
             pending_packets: VecDeque::new(),
+            _marker: PhantomData,
         }
     }
 

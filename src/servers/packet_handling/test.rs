@@ -7,20 +7,20 @@ mod packet_tests {
     };
 
     use crate::{
-        servers::{test_utils::get_dummy_server, NetworkGraph},
+        servers::{packet_handling::get_rid, test_utils::get_dummy_server, NetworkGraph, Text},
         GenericServer,
     };
 
     #[test]
     fn test_get_rid() {
-        assert_eq!(GenericServer::get_rid(u64::from(u16::MAX) + 1), 0);
-        assert_eq!(GenericServer::get_rid(u64::MAX), u16::MAX);
-        assert_eq!(GenericServer::get_rid(u64::from(u16::MAX) + 56), 55);
+        assert_eq!(get_rid(u64::from(u16::MAX) + 1), 0);
+        assert_eq!(get_rid(u64::MAX), u16::MAX);
+        assert_eq!(get_rid(u64::from(u16::MAX) + 56), 55);
     }
 
     #[test]
     fn test_ack() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let ack: Ack = Ack { fragment_index: 0 };
         server
             .sent_history
@@ -31,7 +31,7 @@ mod packet_tests {
 
     #[test]
     fn test_ack_missing() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let ack: Ack = Ack { fragment_index: 0 };
         server
             .sent_history
@@ -42,7 +42,7 @@ mod packet_tests {
 
     #[test]
     fn test_nack_to_pending() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         server
             .sent_history
             .insert(0, (1, 0, 1, [0; FRAGMENT_DSIZE]));
@@ -56,7 +56,7 @@ mod packet_tests {
 
     #[test]
     fn test_nack_resend() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         server
             .sent_history
             .insert(0, (2, 0, 1, [0; FRAGMENT_DSIZE]));
@@ -84,7 +84,7 @@ mod packet_tests {
 
     #[test]
     fn test_nack_routing_error() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         server
             .sent_history
             .insert(0, (1, 0, 1, [0; FRAGMENT_DSIZE]));
@@ -100,7 +100,7 @@ mod packet_tests {
 
     #[test]
     fn test_fragment_recv_scl_ack() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let (scls, sclr) = crossbeam_channel::unbounded();
         server.controller_send = scls.clone();
         server.handle_fragment(
@@ -137,7 +137,7 @@ mod packet_tests {
 
     #[test]
     fn test_fragment_recv_drone_ack() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let (ds, dr) = crossbeam_channel::unbounded();
         server.packet_send.insert(1, ds.clone());
         server.handle_fragment(
@@ -169,7 +169,7 @@ mod packet_tests {
 
     #[test]
     fn test_bad_fragment_recv() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         server.handle_fragment(
             &SourceRoutingHeader::empty_route(),
             0,

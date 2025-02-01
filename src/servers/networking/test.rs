@@ -39,6 +39,7 @@ mod routing_tests {
 
     use crate::servers::{
         networking::test::graphmap_eq, test_utils::get_dummy_server, GenericServer, NetworkGraph,
+        Text,
     };
 
     /// compares two graphs
@@ -67,7 +68,7 @@ mod routing_tests {
 
     #[test]
     fn add_edge_test1() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         assert!(server.check_and_add_edge(0, 1));
         assert!(!server.check_and_add_edge(0, 1));
         assert!(server.check_and_add_edge(1, 0));
@@ -80,7 +81,7 @@ mod routing_tests {
 
     #[test]
     fn add_edge_test2() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         assert!(server.check_and_add_edge(0, 1));
         *server.network_graph.edge_weight_mut(0, 1).unwrap() = 23.;
         assert!(!server.check_and_add_edge(0, 1));
@@ -94,7 +95,7 @@ mod routing_tests {
 
     #[test]
     fn test_update_from_flood() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let mut fr = FloodResponse {
             flood_id: 1,
             path_trace: vec![],
@@ -129,7 +130,7 @@ mod routing_tests {
 
     #[test]
     fn test_update_from_hdr() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 3u8, 4u8, 5u8, 0u8], 0);
         server.update_network_from_header(&hdr);
         let mut res: NetworkGraph = NetworkGraph::from_edges([
@@ -152,7 +153,7 @@ mod routing_tests {
 
     #[test]
     fn test_get_path() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         server.network_graph = NetworkGraph::from_edges([
             (0, 1, 4.),
             (0, 2, 1.),
@@ -176,7 +177,7 @@ mod routing_tests {
 
     #[test]
     fn test_get_srch_from_graph() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 3u8, 4u8, 5u8, 0u8], 0);
         server.network_graph =
             NetworkGraph::from_edges([(3, 1, 1.), (0, 3, 1.), (3, 4, 1.), (4, 3, 1.)]);
@@ -188,7 +189,7 @@ mod routing_tests {
 
     #[test]
     fn test_get_srch_from_srch() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 3u8, 4u8, 5u8, 0u8], 0);
         server.network_graph = NetworkGraph::from_edges([(0, 3, 1.), (3, 4, 1.)]);
         assert_eq!(
@@ -215,13 +216,13 @@ mod networking_tests {
         packet::{FloodResponse, Nack, NackType, NodeType, Packet, PacketType},
     };
 
-    use crate::servers::{networking::test::graphmap_eq, GenericServer, NetworkGraph};
+    use crate::servers::{networking::test::graphmap_eq, GenericServer, NetworkGraph, Text};
 
     use crate::servers::test_utils::get_dummy_server;
 
     #[test]
     fn test_flood_buffer() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         assert!(!server.has_seen_flood((1, 64)));
         server.insert_flood((0, 0));
         assert!(server.has_seen_flood((0, 0)));
@@ -237,7 +238,7 @@ mod networking_tests {
         let (ctrl_send, ctrl_recv_ev) = crossbeam_channel::unbounded();
         let (_, ctrl_recv) = crossbeam_channel::unbounded();
         let (_, server_recv) = crossbeam_channel::unbounded();
-        let server: GenericServer =
+        let server: GenericServer<Text> =
             GenericServer::new(0, ctrl_send, ctrl_recv, server_recv, HashMap::new());
         let dummy_pkt: Packet = Packet::new_ack(SourceRoutingHeader::empty_route(), 0, 0);
         server.send_to_controller(dummy_pkt.clone());
@@ -247,7 +248,7 @@ mod networking_tests {
 
     #[test]
     fn test_handle_my_flood_response() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let response: FloodResponse = FloodResponse {
             flood_id: 0,
             path_trace: vec![
@@ -265,7 +266,7 @@ mod networking_tests {
 
     #[test]
     fn test_handle_flood_response() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let response: FloodResponse = FloodResponse {
             flood_id: 0,
             path_trace: vec![
@@ -286,7 +287,7 @@ mod networking_tests {
 
     #[test]
     fn test_handle_flood_response_to_scl() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let response: FloodResponse = FloodResponse {
             flood_id: 0,
             path_trace: vec![
@@ -376,7 +377,7 @@ mod networking_tests {
 
         // server
         let neighbors_s: HashMap<u8, Sender<Packet>> = HashMap::from([(11, d_send.clone())]);
-        let mut server: GenericServer = GenericServer::new(
+        let mut server: GenericServer<Text> = GenericServer::new(
             1,
             s_event_send.clone(),
             s_command_recv,
@@ -508,7 +509,7 @@ mod networking_tests {
         // client 1
         let neighbours1: HashMap<u8, Sender<Packet>> =
             HashMap::from([(11, d_send.clone()), (12, d12_send.clone())]);
-        let mut server1: GenericServer = GenericServer::new(
+        let mut server1: GenericServer<Text> = GenericServer::new(
             1,
             s_event_send.clone(),
             s1_command_recv,
@@ -519,7 +520,7 @@ mod networking_tests {
         // server 2
         let neighbours2: HashMap<u8, Sender<Packet>> =
             HashMap::from([(13, d13_send.clone()), (14, d14_send.clone())]);
-        let mut server2: GenericServer = GenericServer::new(
+        let mut server2: GenericServer<Text> = GenericServer::new(
             2,
             s_event_send.clone(),
             s2_command_recv,
@@ -579,7 +580,7 @@ mod networking_tests {
 
     #[test]
     fn test_flood_server_isolated() {
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         server.sent_history.insert(0, (2, 0, 1, [0; 128]));
         let (ds, dr) = crossbeam_channel::unbounded();
         let (ss, sr) = crossbeam_channel::unbounded();

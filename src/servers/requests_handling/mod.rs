@@ -19,15 +19,26 @@ use super::{
     GenericServer, SID_MASK,
 };
 
+use crate::servers::ServerType as ST;
+
 #[cfg(test)]
 mod test;
 
-impl GenericServer {
-    #[inline]
-    fn generate_response_id(sid: u64, rid: u16) -> u64 {
-        (sid << 16) | u64::from(rid)
-    }
+fn list_dir(path: &str) -> Result<Vec<String>, io::Error> {
+    Ok(fs::read_dir(path)?
+        .filter(Result::is_ok)
+        .map(|p| p.unwrap().path())
+        .filter(|p| p.is_file())
+        .map(|p| p.into_os_string().into_string().unwrap())
+        .collect())
+}
 
+#[inline]
+fn generate_response_id(sid: u64, rid: u16) -> u64 {
+    (sid << 16) | u64::from(rid)
+}
+
+impl<T: ST> GenericServer<T> {
     fn compress(data: Vec<u8>, comp: &Compression) -> Result<Vec<u8>, String> {
         match comp {
             Compression::LZW => LZWCompressor::new()
@@ -36,15 +47,6 @@ impl GenericServer {
                 .map_err(|_| "Error during compression".to_string()),
             Compression::None => BypassCompressor::new().compress(data),
         }
-    }
-
-    fn list_dir(path: &str) -> Result<Vec<String>, io::Error> {
-        Ok(fs::read_dir(path)?
-            .filter(Result::is_ok)
-            .map(|p| p.unwrap().path())
-            .filter(|p| p.is_file())
-            .map(|p| p.into_os_string().into_string().unwrap())
-            .collect())
     }
 
     pub(crate) fn handle_request(
@@ -70,7 +72,7 @@ impl GenericServer {
                         resp = ResponseMessage::new_text_list_response(
                             self.id,
                             req.compression_type,
-                            Self::list_dir("./public/").unwrap_or_default(),
+                            list_dir("./public/").unwrap_or_default(),
                         );
                     }
                     TextRequest::Text(str) => {
@@ -166,7 +168,7 @@ impl GenericServer {
     ) {
         if let Some(p) = self.get_route(src_id) {
             let packet: Packet = Packet::new_fragment(
-                SourceRoutingHeader::initialize(p),
+                SourceRoutingHeader::new(p, 1),
                 sid,
                 Fragment::new(i, sz, frag),
             );

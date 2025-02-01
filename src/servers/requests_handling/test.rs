@@ -13,13 +13,18 @@ mod request_tests {
     };
 
     use crate::{
-        servers::{serialization::fragment_response, test_utils::get_dummy_server, NetworkGraph},
+        servers::{
+            requests_handling::{generate_response_id, list_dir},
+            serialization::fragment_response,
+            test_utils::get_dummy_server,
+            NetworkGraph, Text,
+        },
         GenericServer,
     };
 
     fn test_handle_request(request: RequestMessage, response: ResponseMessage) {
         assert!(request.compression_type == Compression::LZW);
-        let mut server: GenericServer = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server();
         let (ds, dr) = crossbeam_channel::unbounded();
         server.network_graph = NetworkGraph::from_edges([(0, 1, 1.), (1, 2, 1.)]);
         server.packet_send.insert(1, ds);
@@ -62,14 +67,14 @@ mod request_tests {
 
     #[test]
     fn test_response_id() {
-        assert!(GenericServer::generate_response_id(0, 0) == 0);
-        assert!(GenericServer::generate_response_id(0, 256) == 256);
-        assert!(GenericServer::generate_response_id(1, 23) == u64::from(u16::MAX) + 24);
+        assert!(generate_response_id(0, 0) == 0);
+        assert!(generate_response_id(0, 256) == 256);
+        assert!(generate_response_id(1, 23) == u64::from(u16::MAX) + 24);
     }
 
     #[test]
     fn list_dir_test() {
-        let l: Vec<String> = GenericServer::list_dir("./public/").unwrap_or_default();
+        let l: Vec<String> = list_dir("./public/").unwrap_or_default();
         assert!(l == vec!["./public/file.html".to_string()]);
     }
 
@@ -87,7 +92,7 @@ mod request_tests {
         let response: ResponseMessage = ResponseMessage::new_text_list_response(
             0,
             Compression::LZW,
-            GenericServer::list_dir("./public/").unwrap(),
+            list_dir("./public/").unwrap(),
         );
         test_handle_request(request, response);
     }
