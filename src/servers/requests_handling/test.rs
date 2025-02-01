@@ -17,7 +17,7 @@ mod request_tests {
             requests_handling::{generate_response_id, list_dir},
             serialization::fragment_response,
             test_utils::get_dummy_server,
-            NetworkGraph, Text,
+            NetworkGraph, Text, TEXT_PATH,
         },
         GenericServer,
     };
@@ -74,8 +74,8 @@ mod request_tests {
 
     #[test]
     fn list_dir_test() {
-        let l: Vec<String> = list_dir("./public/").unwrap_or_default();
-        assert!(l == vec!["./public/file.html".to_string()]);
+        let l: Vec<String> = list_dir(TEXT_PATH).unwrap_or_default();
+        assert!(l == vec![TEXT_PATH.to_string() + "file.html"]);
     }
 
     #[test]
@@ -92,19 +92,22 @@ mod request_tests {
         let response: ResponseMessage = ResponseMessage::new_text_list_response(
             0,
             Compression::LZW,
-            list_dir("./public/").unwrap(),
+            list_dir(TEXT_PATH).unwrap(),
         );
         test_handle_request(request, response);
     }
 
     #[test]
     fn test_handle_file_request() {
-        let request: RequestMessage =
-            RequestMessage::new_text_request(1, Compression::LZW, "./public/file.html".to_string());
+        let request: RequestMessage = RequestMessage::new_text_request(
+            1,
+            Compression::LZW,
+            TEXT_PATH.to_owned() + "file.html",
+        );
         let response: ResponseMessage = ResponseMessage::new_text_response(
             0,
             Compression::LZW,
-            read("./public/file.html").unwrap(),
+            read(TEXT_PATH.to_owned() + "file.html").unwrap(),
         );
         test_handle_request(request, response);
     }

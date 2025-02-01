@@ -6,7 +6,7 @@ use wg_2024::{
     packet::{Ack, Fragment, Nack, NackType, Packet, FRAGMENT_DSIZE},
 };
 
-use super::{GenericServer, ServerType, RID_MASK};
+use super::{GenericServer, RequestHandler, ServerType, RID_MASK};
 
 #[cfg(test)]
 mod test;
@@ -17,7 +17,10 @@ fn get_rid(sid: u64) -> u16 {
     u16::try_from(sid & RID_MASK).unwrap()
 }
 
-impl<T: ServerType> GenericServer<T> {
+impl<T: ServerType> GenericServer<T>
+where
+    GenericServer<T>: RequestHandler,
+{
     pub(crate) fn handle_ack(&mut self, sid: u64, _ack: &Ack) {
         self.sent_history.remove(&sid).map_or_else(
             || warn!(target: &self.target_topic, "Received unknow sid in Ack msg: {sid}"),

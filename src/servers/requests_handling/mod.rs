@@ -5,7 +5,9 @@ use std::{
 
 use common::{
     slc_commands::{ServerEvent, ServerType},
-    web_messages::{Compression, Request, ResponseMessage, Serializable, TextRequest},
+    web_messages::{
+        Compression, MediaRequest, Request, ResponseMessage, Serializable, TextRequest,
+    },
 };
 use compression::{bypass::BypassCompressor, lzw::LZWCompressor, Compressor};
 use log::{error, info, warn};
@@ -16,10 +18,11 @@ use wg_2024::{
 
 use super::{
     serialization::{defragment_deserialize_request, fragment_response},
-    GenericServer, SID_MASK,
+    GenericServer, Media, RequestHandler, Text, SID_MASK,
 };
 
-use crate::servers::ServerType as ST;
+use crate::servers::TEXT_PATH;
+use crate::servers::{ServerType as ST, MEDIA_PATH};
 
 #[cfg(test)]
 mod test;
@@ -47,55 +50,6 @@ impl<T: ST> GenericServer<T> {
                 .map_err(|_| "Error during compression".to_string()),
             Compression::None => BypassCompressor::new().compress(data),
         }
-    }
-
-    pub(crate) fn handle_request(
-        &mut self,
-        srch: &SourceRoutingHeader,
-        src_id: NodeId,
-        rid: u16,
-        data: Vec<[u8; FRAGMENT_DSIZE]>,
-    ) {
-        if let Ok(req) = defragment_deserialize_request(data) {
-            let resp: ResponseMessage;
-            #[allow(clippy::match_wildcard_for_single_variants)]
-            match req.content {
-                Request::Type => {
-                    resp = ResponseMessage::new_type_response(
-                        self.id,
-                        req.compression_type,
-                        ServerType::FileServer,
-                    );
-                }
-                Request::Text(tr) => match tr {
-                    TextRequest::TextList => {
-                        resp = ResponseMessage::new_text_list_response(
-                            self.id,
-                            req.compression_type,
-                            list_dir("./public/").unwrap_or_default(),
-                        );
-                    }
-                    TextRequest::Text(str) => {
-                        resp = if let Ok(data) = read(str) {
-                            ResponseMessage::new_text_response(self.id, req.compression_type, data)
-                        } else {
-                            ResponseMessage::new_not_found_response(self.id, req.compression_type)
-                        }
-                    }
-                },
-                _ => {
-                    resp = ResponseMessage::new_invalid_request_response(
-                        self.id,
-                        req.compression_type,
-                    );
-                }
-            }
-            info!(target: &self.target_topic, "Sending response: {resp:?}");
-            self.send_response(srch, src_id, rid, &resp);
-        } else {
-            error!(target: &self.target_topic, "Received undeserializable request, sending invalid response");
-        }
-        // self.session_id = (self.session_id + 1) & SID_MASK;
     }
 
     pub(crate) fn send_response(
@@ -190,5 +144,107 @@ impl<T: ST> GenericServer<T> {
             self.graph_updated = false;
             self.pending_packets.push_back(sid);
         }
+    }
+}
+
+impl RequestHandler for GenericServer<Text> {
+    fn handle_request(
+        &mut self,
+        srch: &SourceRoutingHeader,
+        src_id: NodeId,
+        rid: u16,
+        data: Vec<[u8; FRAGMENT_DSIZE]>,
+    ) {
+        if let Ok(req) = defragment_deserialize_request(data) {
+            let resp: ResponseMessage;
+            #[allow(clippy::match_wildcard_for_single_variants)]
+            match req.content {
+                Request::Type => {
+                    resp = ResponseMessage::new_type_response(
+                        self.id,
+                        req.compression_type,
+                        ServerType::FileServer,
+                    );
+                }
+                Request::Text(tr) => match tr {
+                    TextRequest::TextList => {
+                        resp = ResponseMessage::new_text_list_response(
+                            self.id,
+                            req.compression_type,
+                            list_dir(TEXT_PATH).unwrap_or_default(),
+                        );
+                    }
+                    TextRequest::Text(str) => {
+                        resp = if let Ok(data) = read(str) {
+                            ResponseMessage::new_text_response(self.id, req.compression_type, data)
+                        } else {
+                            ResponseMessage::new_not_found_response(self.id, req.compression_type)
+                        }
+                    }
+                },
+                _ => {
+                    resp = ResponseMessage::new_invalid_request_response(
+                        self.id,
+                        req.compression_type,
+                    );
+                }
+            }
+            info!(target: &self.target_topic, "Sending response: {resp:?}");
+            self.send_response(srch, src_id, rid, &resp);
+        } else {
+            error!(target: &self.target_topic, "Received undeserializable request, sending invalid response");
+        }
+        // self.session_id = (self.session_id + 1) & SID_MASK;
+    }
+}
+
+impl RequestHandler for GenericServer<Media> {
+    fn handle_request(
+        &mut self,
+        srch: &SourceRoutingHeader,
+        src_id: NodeId,
+        rid: u16,
+        data: Vec<[u8; FRAGMENT_DSIZE]>,
+    ) {
+        if let Ok(req) = defragment_deserialize_request(data) {
+            let resp: ResponseMessage;
+            #[allow(clippy::match_wildcard_for_single_variants)]
+            match req.content {
+                Request::Type => {
+                    resp = ResponseMessage::new_type_response(
+                        self.id,
+                        req.compression_type,
+                        ServerType::FileServer,
+                    );
+                }
+                Request::Media(mr) => match mr {
+                    MediaRequest::MediaList => {
+                        resp = ResponseMessage::new_text_list_response(
+                            self.id,
+                            req.compression_type,
+                            list_dir(MEDIA_PATH).unwrap_or_default(),
+                        );
+                    }
+                    MediaRequest::Media(str) => {
+                        resp = if let Ok(data) = read(str) {
+                            ResponseMessage::new_text_response(self.id, req.compression_type, data)
+                        } else {
+                            ResponseMessage::new_not_found_response(self.id, req.compression_type)
+                        }
+                    }
+                },
+                _ => {
+                    resp = ResponseMessage::new_invalid_request_response(
+                        self.id,
+                        req.compression_type,
+                    );
+                }
+            }
+            info!(target: &self.target_topic, "Sending response: {resp:?}");
+            self.send_response(srch, src_id, rid, &resp);
+        } else {
+            error!(target: &self.target_topic, "Received undeserializable request, sending invalid response");
+        }
+        // self.session_id = (self.session_id + 1) & SID_MASK;
     }
 }

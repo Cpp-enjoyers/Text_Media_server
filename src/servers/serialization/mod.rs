@@ -6,13 +6,13 @@ use wg_2024::packet::FRAGMENT_DSIZE;
 #[cfg(test)]
 mod test;
 
-pub(crate) fn defragment_deserialize_request(
+pub(super) fn defragment_deserialize_request(
     data: Vec<[u8; FRAGMENT_DSIZE]>,
 ) -> Result<RequestMessage, SerializationError> {
     RequestMessage::deserialize(data.into_flattened())
 }
 
-pub(crate) fn fragment_response(data: Vec<u8>) -> Vec<[u8; FRAGMENT_DSIZE]> {
+pub(super) fn fragment_response(data: Vec<u8>) -> Vec<[u8; FRAGMENT_DSIZE]> {
     data.into_iter()
         .chunks(FRAGMENT_DSIZE)
         .into_iter()

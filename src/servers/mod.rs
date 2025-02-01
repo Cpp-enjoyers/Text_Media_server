@@ -42,6 +42,8 @@ type PendingQueue = VecDeque<u64>;
 
 const SID_MASK: u64 = 0xFFFF_FFFF_FFFF;
 const RID_MASK: u64 = 0xFFFF;
+const TEXT_PATH: &str = "./public/";
+const MEDIA_PATH: &str = "./media/";
 
 pub trait ServerType {}
 
@@ -50,6 +52,16 @@ pub struct Text {}
 
 impl ServerType for Media {}
 impl ServerType for Text {}
+
+pub trait RequestHandler {
+    fn handle_request(
+        &mut self,
+        srch: &SourceRoutingHeader,
+        src_id: NodeId,
+        rid: u16,
+        data: Vec<[u8; FRAGMENT_DSIZE]>,
+    );
+}
 
 pub type TextServer = GenericServer<Text>;
 pub type MediaServer = GenericServer<Text>;
@@ -72,7 +84,10 @@ pub struct GenericServer<T: ServerType> {
     _marker: PhantomData<T>,
 }
 
-impl<T: ServerType> GenericServer<T> {
+impl<T: ServerType> GenericServer<T>
+where
+    GenericServer<T>: RequestHandler,
+{
     fn handle_packet(&mut self, packet: Packet) {
         let srch: SourceRoutingHeader = packet.routing_header;
         let sid: u64 = packet.session_id;
@@ -127,7 +142,10 @@ impl<T: ServerType> GenericServer<T> {
     }
 }
 
-impl<T: ServerType> Server for GenericServer<T> {
+impl<T: ServerType> Server for GenericServer<T>
+where
+    GenericServer<T>: RequestHandler,
+{
     fn new(
         id: NodeId,
         controller_send: Sender<ServerEvent>,
