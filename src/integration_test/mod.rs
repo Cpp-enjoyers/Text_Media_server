@@ -1,2 +1,2 @@
 #[cfg(test)]
-mod tests {}
+mod client_interaction_tests {}
