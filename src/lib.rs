@@ -1,5 +1,8 @@
 #![allow(dead_code)]
+#![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
+//#![deny(missing_docs)]
+
 mod integration_test;
 pub mod servers;
 
