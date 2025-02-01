@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod serialization_tests {
-    use common::web_messages::{Compression, RequestMessage, ResponseMessage, Serializable};
+    use common::web_messages::{
+        Compression, RequestMessage, ResponseMessage, Serializable, SerializationError,
+    };
 
     use crate::servers::serialization::{defragment_deserialize_request, fragment_response};
 
@@ -13,7 +15,8 @@ mod serialization_tests {
         // let real_sz = (fragmented.len() - 1) * 128 + sz as usize;
         let data: Vec<u8> = fragmented.into_iter().flatten().collect();
         // data.resize(real_sz, 0);
-        let resp_d = ResponseMessage::deserialize(data);
+        let resp_d: Result<ResponseMessage, SerializationError> =
+            ResponseMessage::deserialize(data);
         assert!(resp_d.is_ok());
         assert_eq!(resp_d.unwrap(), resp);
     }
@@ -30,7 +33,8 @@ mod serialization_tests {
         // let real_sz = (fragmented.len() - 1) * 128 + sz as usize;
         let data: Vec<u8> = fragmented.into_iter().flatten().collect();
         // data.resize(real_sz, 0);
-        let resp_d = ResponseMessage::deserialize(data);
+        let resp_d: Result<ResponseMessage, SerializationError> =
+            ResponseMessage::deserialize(data);
         assert!(resp_d.is_ok());
         assert_eq!(resp_d.unwrap(), resp);
     }
@@ -69,7 +73,8 @@ mod serialization_tests {
         // let real_sz = (fragmented.len() - 1) * 128 + sz as usize;
         let data: Vec<u8> = fragmented.into_iter().flatten().collect();
         // data.resize(real_sz, 0);
-        let resp_d = ResponseMessage::deserialize(data);
+        let resp_d: Result<ResponseMessage, SerializationError> =
+            ResponseMessage::deserialize(data);
         assert!(resp_d.is_ok());
         assert_eq!(resp_d.unwrap(), resp);
     }
@@ -87,7 +92,8 @@ mod serialization_tests {
         let mut data: Vec<u8> = fragmented.into_iter().flatten().collect();
         // data.resize(real_sz, 0);
         data[5] = 123u8; // corrupt data
-        let resp_d = ResponseMessage::deserialize(data);
+        let resp_d: Result<ResponseMessage, SerializationError> =
+            ResponseMessage::deserialize(data);
         assert!(resp_d.is_err());
     }
 
@@ -97,7 +103,8 @@ mod serialization_tests {
             RequestMessage::new_text_request(0, Compression::LZW, "file".to_string());
         let data: Vec<u8> = req.serialize().unwrap();
         let data: Vec<[u8; 128]> = fragment_response(data);
-        let req_d = defragment_deserialize_request(data);
+        let req_d: Result<RequestMessage, SerializationError> =
+            defragment_deserialize_request(data);
         assert!(req_d.is_ok());
         assert_eq!(req_d.unwrap(), req);
     }
@@ -107,7 +114,8 @@ mod serialization_tests {
         let req: RequestMessage = RequestMessage::new_type_request(0, Compression::LZW);
         let data: Vec<u8> = req.serialize().unwrap();
         let data: Vec<[u8; 128]> = fragment_response(data);
-        let req_d = defragment_deserialize_request(data);
+        let req_d: Result<RequestMessage, SerializationError> =
+            defragment_deserialize_request(data);
         assert!(req_d.is_ok());
         assert_eq!(req_d.unwrap(), req);
     }
@@ -117,7 +125,8 @@ mod serialization_tests {
         let req: RequestMessage = RequestMessage::new_text_list_request(0, Compression::LZW);
         let data: Vec<u8> = req.serialize().unwrap();
         let data: Vec<[u8; 128]> = fragment_response(data);
-        let req_d = defragment_deserialize_request(data);
+        let req_d: Result<RequestMessage, SerializationError> =
+            defragment_deserialize_request(data);
         assert!(req_d.is_ok());
         assert_eq!(req_d.unwrap(), req);
     }
@@ -126,10 +135,11 @@ mod serialization_tests {
     fn test_defragment4() {
         let req: RequestMessage = RequestMessage::new_text_list_request(0, Compression::LZW);
         let mut data: Vec<u8> = req.serialize().unwrap();
-        data[0] = 0u8; // corrupt data
+        data[3] = 57u8; // corrupt data
         let data: Vec<[u8; 128]> = fragment_response(data);
-        let req_d = defragment_deserialize_request(data);
-        assert!(req_d.is_ok());
-        assert_eq!(req_d.unwrap(), req);
+        let req_d: Result<RequestMessage, SerializationError> =
+            defragment_deserialize_request(data);
+        assert!(req_d.is_err());
+        // assert_eq!(req_d.unwrap(), req);
     }
 }
