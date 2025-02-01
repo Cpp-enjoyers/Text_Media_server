@@ -38,8 +38,8 @@ mod routing_tests {
     };
 
     use crate::servers::{
-        networking::test::graphmap_eq, test_utils::get_dummy_server, GenericServer, NetworkGraph,
-        Text,
+        networking::test::graphmap_eq, test_utils::get_dummy_server_text, GenericServer,
+        NetworkGraph, Text,
     };
 
     /// compares two graphs
@@ -68,7 +68,7 @@ mod routing_tests {
 
     #[test]
     fn add_edge_test1() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         assert!(server.check_and_add_edge(0, 1));
         assert!(!server.check_and_add_edge(0, 1));
         assert!(server.check_and_add_edge(1, 0));
@@ -81,7 +81,7 @@ mod routing_tests {
 
     #[test]
     fn add_edge_test2() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         assert!(server.check_and_add_edge(0, 1));
         *server.network_graph.edge_weight_mut(0, 1).unwrap() = 23.;
         assert!(!server.check_and_add_edge(0, 1));
@@ -95,7 +95,7 @@ mod routing_tests {
 
     #[test]
     fn test_update_from_flood() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         let mut fr = FloodResponse {
             flood_id: 1,
             path_trace: vec![],
@@ -130,7 +130,7 @@ mod routing_tests {
 
     #[test]
     fn test_update_from_hdr() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 3u8, 4u8, 5u8, 0u8], 0);
         server.update_network_from_header(&hdr);
         let mut res: NetworkGraph = NetworkGraph::from_edges([
@@ -153,7 +153,7 @@ mod routing_tests {
 
     #[test]
     fn test_get_path() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         server.network_graph = NetworkGraph::from_edges([
             (0, 1, 4.),
             (0, 2, 1.),
@@ -177,7 +177,7 @@ mod routing_tests {
 
     #[test]
     fn test_get_srch_from_graph() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 3u8, 4u8, 5u8, 0u8], 0);
         server.network_graph =
             NetworkGraph::from_edges([(3, 1, 1.), (0, 3, 1.), (3, 4, 1.), (4, 3, 1.)]);
@@ -189,7 +189,7 @@ mod routing_tests {
 
     #[test]
     fn test_get_srch_from_srch() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 3u8, 4u8, 5u8, 0u8], 0);
         server.network_graph = NetworkGraph::from_edges([(0, 3, 1.), (3, 4, 1.)]);
         assert_eq!(
@@ -218,11 +218,11 @@ mod networking_tests {
 
     use crate::servers::{networking::test::graphmap_eq, GenericServer, NetworkGraph, Text};
 
-    use crate::servers::test_utils::get_dummy_server;
+    use crate::servers::test_utils::get_dummy_server_text;
 
     #[test]
     fn test_flood_buffer() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         assert!(!server.has_seen_flood((1, 64)));
         server.insert_flood((0, 0));
         assert!(server.has_seen_flood((0, 0)));
@@ -248,7 +248,7 @@ mod networking_tests {
 
     #[test]
     fn test_handle_my_flood_response() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         let response: FloodResponse = FloodResponse {
             flood_id: 0,
             path_trace: vec![
@@ -266,7 +266,7 @@ mod networking_tests {
 
     #[test]
     fn test_handle_flood_response() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         let response: FloodResponse = FloodResponse {
             flood_id: 0,
             path_trace: vec![
@@ -287,7 +287,7 @@ mod networking_tests {
 
     #[test]
     fn test_handle_flood_response_to_scl() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         let response: FloodResponse = FloodResponse {
             flood_id: 0,
             path_trace: vec![
@@ -580,7 +580,7 @@ mod networking_tests {
 
     #[test]
     fn test_flood_server_isolated() {
-        let mut server: GenericServer<Text> = get_dummy_server();
+        let mut server: GenericServer<Text> = get_dummy_server_text();
         server.sent_history.insert(0, (2, 0, 1, [0; 128]));
         let (ds, dr) = crossbeam_channel::unbounded();
         let (ss, sr) = crossbeam_channel::unbounded();

@@ -1,6 +1,7 @@
 use std::{
     fs::{self, read},
     io,
+    path::PathBuf,
 };
 
 use common::{
@@ -30,9 +31,9 @@ mod test;
 fn list_dir(path: &str) -> Result<Vec<String>, io::Error> {
     Ok(fs::read_dir(path)?
         .filter(Result::is_ok)
-        .map(|p| p.unwrap().path())
-        .filter(|p| p.is_file())
-        .map(|p| p.into_os_string().into_string().unwrap())
+        .map(|p: Result<fs::DirEntry, io::Error>| p.unwrap().path())
+        .filter(|p: &PathBuf| p.is_file())
+        .map(|p: PathBuf| p.into_os_string().into_string().unwrap())
         .collect())
 }
 
@@ -214,12 +215,12 @@ impl RequestHandler for GenericServer<Media> {
                     resp = ResponseMessage::new_type_response(
                         self.id,
                         req.compression_type,
-                        ServerType::FileServer,
+                        ServerType::MediaServer,
                     );
                 }
                 Request::Media(mr) => match mr {
                     MediaRequest::MediaList => {
-                        resp = ResponseMessage::new_text_list_response(
+                        resp = ResponseMessage::new_media_list_response(
                             self.id,
                             req.compression_type,
                             list_dir(MEDIA_PATH).unwrap_or_default(),
@@ -227,7 +228,7 @@ impl RequestHandler for GenericServer<Media> {
                     }
                     MediaRequest::Media(str) => {
                         resp = if let Ok(data) = read(str) {
-                            ResponseMessage::new_text_response(self.id, req.compression_type, data)
+                            ResponseMessage::new_media_response(self.id, req.compression_type, data)
                         } else {
                             ResponseMessage::new_not_found_response(self.id, req.compression_type)
                         }

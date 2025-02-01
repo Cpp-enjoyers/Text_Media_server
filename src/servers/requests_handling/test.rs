@@ -16,15 +16,20 @@ mod request_tests {
         servers::{
             requests_handling::{generate_response_id, list_dir},
             serialization::fragment_response,
-            test_utils::get_dummy_server,
-            NetworkGraph, Text, TEXT_PATH,
+            test_utils::{get_dummy_server_media, get_dummy_server_text},
+            NetworkGraph, RequestHandler, ServerType as ST, MEDIA_PATH, TEXT_PATH,
         },
         GenericServer,
     };
 
-    fn test_handle_request(request: RequestMessage, response: ResponseMessage) {
+    fn test_handle_request<T: ST>(
+        mut server: GenericServer<T>,
+        request: RequestMessage,
+        response: ResponseMessage,
+    ) where
+        GenericServer<T>: RequestHandler,
+    {
         assert!(request.compression_type == Compression::LZW);
-        let mut server: GenericServer<Text> = get_dummy_server();
         let (ds, dr) = crossbeam_channel::unbounded();
         server.network_graph = NetworkGraph::from_edges([(0, 1, 1.), (1, 2, 1.)]);
         server.packet_send.insert(1, ds);
@@ -79,26 +84,26 @@ mod request_tests {
     }
 
     #[test]
-    fn test_handle_type_request() {
+    fn test_text_server_handle_type_request() {
         let request: RequestMessage = RequestMessage::new_type_request(1, Compression::LZW);
         let response: ResponseMessage =
             ResponseMessage::new_type_response(0, Compression::LZW, ServerType::FileServer);
-        test_handle_request(request, response);
+        test_handle_request(get_dummy_server_text(), request, response);
     }
 
     #[test]
-    fn test_handle_file_list_request() {
+    fn test_text_server_handle_file_list_request() {
         let request: RequestMessage = RequestMessage::new_text_list_request(1, Compression::LZW);
         let response: ResponseMessage = ResponseMessage::new_text_list_response(
             0,
             Compression::LZW,
             list_dir(TEXT_PATH).unwrap(),
         );
-        test_handle_request(request, response);
+        test_handle_request(get_dummy_server_text(), request, response);
     }
 
     #[test]
-    fn test_handle_file_request() {
+    fn test_text_server_handle_file_request() {
         let request: RequestMessage = RequestMessage::new_text_request(
             1,
             Compression::LZW,
@@ -109,24 +114,76 @@ mod request_tests {
             Compression::LZW,
             read(TEXT_PATH.to_owned() + "file.html").unwrap(),
         );
-        test_handle_request(request, response);
+        test_handle_request(get_dummy_server_text(), request, response);
     }
 
     #[test]
-    fn test_handle_unknown_file_request() {
+    fn test_text_server_handle_unknown_file_request() {
         let request: RequestMessage =
             RequestMessage::new_text_request(1, Compression::LZW, "non_esisto".to_string());
         let response: ResponseMessage =
             ResponseMessage::new_not_found_response(0, Compression::LZW);
-        test_handle_request(request, response);
+        test_handle_request(get_dummy_server_text(), request, response);
     }
 
     #[test]
-    fn test_handle_media_request() {
+    fn test_text_server_handle_media_request() {
         let request: RequestMessage =
             RequestMessage::new_media_request(1, Compression::LZW, "non_esisto".to_string());
         let response: ResponseMessage =
             ResponseMessage::new_invalid_request_response(0, Compression::LZW);
-        test_handle_request(request, response);
+        test_handle_request(get_dummy_server_text(), request, response);
+    }
+
+    #[test]
+    fn test_media_server_handle_type_request() {
+        let request: RequestMessage = RequestMessage::new_type_request(1, Compression::LZW);
+        let response: ResponseMessage =
+            ResponseMessage::new_type_response(0, Compression::LZW, ServerType::MediaServer);
+        test_handle_request(get_dummy_server_media(), request, response);
+    }
+
+    #[test]
+    fn test_media_server_handle_file_list_request() {
+        let request: RequestMessage = RequestMessage::new_media_list_request(1, Compression::LZW);
+        let response: ResponseMessage = ResponseMessage::new_media_list_response(
+            0,
+            Compression::LZW,
+            list_dir(MEDIA_PATH).unwrap(),
+        );
+        test_handle_request(get_dummy_server_media(), request, response);
+    }
+
+    #[test]
+    fn test_media_server_handle_file_request() {
+        let request: RequestMessage = RequestMessage::new_media_request(
+            1,
+            Compression::LZW,
+            MEDIA_PATH.to_owned() + "image.jpg",
+        );
+        let response: ResponseMessage = ResponseMessage::new_media_response(
+            0,
+            Compression::LZW,
+            read(MEDIA_PATH.to_owned() + "image.jpg").unwrap(),
+        );
+        test_handle_request(get_dummy_server_media(), request, response);
+    }
+
+    #[test]
+    fn test_media_server_handle_unknown_file_request() {
+        let request: RequestMessage =
+            RequestMessage::new_media_request(1, Compression::LZW, "non_esisto".to_string());
+        let response: ResponseMessage =
+            ResponseMessage::new_not_found_response(0, Compression::LZW);
+        test_handle_request(get_dummy_server_media(), request, response);
+    }
+
+    #[test]
+    fn test_media_server_handle_text_request() {
+        let request: RequestMessage =
+            RequestMessage::new_text_request(1, Compression::LZW, "non_esisto".to_string());
+        let response: ResponseMessage =
+            ResponseMessage::new_invalid_request_response(0, Compression::LZW);
+        test_handle_request(get_dummy_server_media(), request, response);
     }
 }
