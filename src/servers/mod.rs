@@ -64,7 +64,7 @@ pub trait RequestHandler {
 }
 
 pub type TextServer = GenericServer<Text>;
-pub type MediaServer = GenericServer<Text>;
+pub type MediaServer = GenericServer<Media>;
 
 pub struct GenericServer<T: ServerType> {
     id: NodeId,
