@@ -7,10 +7,13 @@ use std::{
 use common::{
     slc_commands::{ServerEvent, ServerType},
     web_messages::{
-        Compression, MediaRequest, Request, ResponseMessage, Serializable, TextRequest,
+        Compression, MediaRequest, Request, ResponseMessage, Serializable, SerializableSerde,
+        TextRequest,
     },
 };
-use compression::{bypass::BypassCompressor, lzw::LZWCompressor, Compressor};
+use compression::{
+    bypass::BypassCompressor, huffman::HuffmanCompressor, lzw::LZWCompressor, Compressor,
+};
 use log::{error, info, warn};
 use wg_2024::{
     network::{NodeId, SourceRoutingHeader},
@@ -45,9 +48,11 @@ fn generate_response_id(sid: u64, rid: u16) -> u64 {
 impl<T: ST> GenericServer<T> {
     fn compress(data: Vec<u8>, comp: &Compression) -> Result<Vec<u8>, String> {
         match comp {
-            Compression::LZW => LZWCompressor::new()
+            Compression::Huffman => HuffmanCompressor::new()
                 .compress(data)?
                 .serialize()
+                .map_err(|_| "Error during compression".to_string()),
+            Compression::LZW => Serializable::serialize(&LZWCompressor::new().compress(data)?)
                 .map_err(|_| "Error during compression".to_string()),
             Compression::None => BypassCompressor::new().compress(data),
         }

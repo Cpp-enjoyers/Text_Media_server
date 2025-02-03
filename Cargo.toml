@@ -12,6 +12,7 @@ log = { version = "0.4.25", features = ["max_level_info", "release_max_level_err
 crossbeam-channel = "0.5"
 itertools = "0.14.0"
 petgraph = "0.7.1"
+serde = "1.0"
 ap2024_unitn_cppenjoyers_drone = { git = "https://github.com/Cpp-enjoyers/drone.git" }
 
 [dev-dependencies]
