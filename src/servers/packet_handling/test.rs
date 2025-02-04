@@ -7,18 +7,9 @@ mod packet_tests {
     };
 
     use crate::{
-        servers::{
-            packet_handling::get_rid, test_utils::get_dummy_server_text, NetworkGraph, Text,
-        },
+        servers::{test_utils::get_dummy_server_text, NetworkGraph, Text},
         GenericServer,
     };
-
-    #[test]
-    fn test_get_rid() {
-        assert_eq!(get_rid(u64::from(u16::MAX) + 1), 0);
-        assert_eq!(get_rid(u64::MAX), u16::MAX);
-        assert_eq!(get_rid(u64::from(u16::MAX) + 56), 55);
-    }
 
     #[test]
     fn test_ack() {
@@ -85,6 +76,39 @@ mod packet_tests {
     }
 
     #[test]
+    fn test_nack_resend_trice() {
+        let mut server: GenericServer<Text> = get_dummy_server_text();
+        server
+            .sent_history
+            .insert(0, (2, 0, 1, [0; FRAGMENT_DSIZE]));
+        let nack: Nack = Nack {
+            fragment_index: 0,
+            nack_type: NackType::Dropped,
+        };
+        server.network_graph = NetworkGraph::from_edges([(0, 1, 1.), (1, 2, 1.)]);
+        let (ds, dr) = crossbeam_channel::unbounded();
+        server.packet_send.insert(1, ds.clone());
+        server.handle_nack(0, &nack);
+        server.handle_nack(0, &nack);
+        server.handle_nack(0, &nack);
+        for _ in 0..3 {
+            if let Ok(packet) = dr.recv() {
+                match packet.pack_type {
+                    PacketType::MsgFragment(f) => {
+                        assert_eq!(f.data, [0; FRAGMENT_DSIZE]);
+                    }
+                    _ => {
+                        panic!();
+                    }
+                }
+            } else {
+                panic!()
+            }
+        }
+        assert!(dr.try_recv().is_err());
+    }
+
+    #[test]
     fn test_nack_routing_error() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
         server
@@ -122,14 +146,11 @@ mod packet_tests {
         assert!(server.fragment_history.is_empty());
         if let Ok(p) = sclr.recv() {
             match p {
-                ServerEvent::ShortCut(p) => match p.pack_type {
-                    PacketType::Ack(_) => {}
-                    _ => {
-                        panic!()
-                    }
-                },
+                ServerEvent::ShortCut(p) => {
+                    matches!(p.pack_type, PacketType::Ack(_));
+                }
                 ServerEvent::PacketSent(_) => {
-                    panic!()
+                    panic!();
                 }
             }
         } else {
@@ -158,12 +179,7 @@ mod packet_tests {
         assert!(frag[0] == [0u8; 128]);
         assert!(server.fragment_history.is_empty());
         if let Ok(p) = dr.recv() {
-            match p.pack_type {
-                PacketType::Ack(_) => {}
-                _ => {
-                    panic!()
-                }
-            }
+            matches!(p.pack_type, PacketType::Ack(_));
         } else {
             panic!();
         }

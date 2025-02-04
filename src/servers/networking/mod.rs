@@ -6,7 +6,8 @@ use wg_2024::{
     packet::{FloodRequest, FloodResponse, NodeType, Packet},
 };
 
-use super::{GenericServer, ServerType, SID_MASK};
+use super::{GenericServer, ServerType};
+use crate::protocol_utils as network_protocol;
 
 mod routing;
 #[cfg(test)]
@@ -85,7 +86,7 @@ impl<T: ServerType> GenericServer<T> {
             0,
             FloodRequest::initialize(self.session_id, self.id, NodeType::Server),
         );
-        self.session_id = (self.session_id + 1) & SID_MASK;
+        self.session_id = network_protocol::next_sid(self.session_id);
         for (id, c) in &self.packet_send {
             info!(target: &self.target_topic, "Sending flood request to {id}");
             let _ = c.send(flood.clone());

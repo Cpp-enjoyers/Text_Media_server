@@ -4,6 +4,7 @@
 //#![deny(missing_docs)]
 
 mod integration_test;
+pub(crate) mod protocol_utils;
 pub mod servers;
 
 pub use servers::GenericServer;

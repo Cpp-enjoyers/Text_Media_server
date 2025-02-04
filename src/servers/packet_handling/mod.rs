@@ -6,16 +6,11 @@ use wg_2024::{
     packet::{Ack, Fragment, Nack, NackType, Packet, FRAGMENT_DSIZE},
 };
 
-use super::{GenericServer, RequestHandler, ServerType, RID_MASK};
+use super::{GenericServer, RequestHandler, ServerType};
+use crate::protocol_utils as network_protocol;
 
 #[cfg(test)]
 mod test;
-
-#[inline]
-fn get_rid(sid: u64) -> u16 {
-    // intentional, if shifted by 48 it fits into 16
-    u16::try_from(sid & RID_MASK).unwrap()
-}
 
 impl<T: ServerType> GenericServer<T>
 where
@@ -64,7 +59,7 @@ where
         sid: u64,
         frag: &Fragment,
     ) {
-        let rid: u16 = get_rid(sid);
+        let rid: u16 = network_protocol::get_rid(sid);
         if let Some(&id) = srch.hops.first() {
             let entry: &mut (u64, Vec<[u8; FRAGMENT_DSIZE]>) =
                 self.fragment_history.entry((id, rid)).or_insert((

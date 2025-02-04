@@ -11,7 +11,7 @@ mod command_tests {
     fn test_add_command() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
         let (ds, _) = crossbeam_channel::unbounded();
-        let command = ServerCommand::AddSender(1, ds.clone());
+        let command: ServerCommand = ServerCommand::AddSender(1, ds.clone());
         server.handle_command(command);
         assert!(server.packet_send.len() == 1);
         assert!(server.network_graph.contains_node(1));

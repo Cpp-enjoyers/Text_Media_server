@@ -1,6 +1,5 @@
 /*
  * TODOS: ETX with packet count + exponentially moving average
- *        Cache shortest paths (this conflicts with ETX tho)
  *        Multithreading?
  */
 
@@ -35,15 +34,15 @@ mod test_utils;
 // maps (SenderId, rid) -> (#recv_fragments, fragments)
 type FragmentHistory = HashMap<(NodeId, u16), (u64, Vec<[u8; FRAGMENT_DSIZE]>)>;
 // maps sid -> (ReceiverId, frag_idx, #tot_frags, frag)
+// TODO
 type MessageHistory = HashMap<u64, (NodeId, u64, u64, [u8; FRAGMENT_DSIZE])>;
 type FloodHistory = HashMap<NodeId, RingBuffer<u64>>;
 type NetworkGraph = DiGraphMap<NodeId, f64>;
 type PendingQueue = VecDeque<u64>;
 
-const SID_MASK: u64 = 0xFFFF_FFFF_FFFF;
-const RID_MASK: u64 = 0xFFFF;
 const TEXT_PATH: &str = "./public/";
 const MEDIA_PATH: &str = "./media/";
+const INTIAL_PDR: f64 = 1.; // Beta(1, 1), is a baesyan approach better?
 
 pub trait ServerType {}
 

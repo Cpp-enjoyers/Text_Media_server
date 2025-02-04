@@ -17,7 +17,7 @@ mod request_tests {
 
     use crate::{
         servers::{
-            requests_handling::{generate_response_id, list_dir},
+            requests_handling::list_dir,
             serialization::fragment_response,
             test_utils::{get_dummy_server_media, get_dummy_server_text},
             NetworkGraph, RequestHandler, ServerType as ST, MEDIA_PATH, TEXT_PATH,
@@ -32,7 +32,7 @@ mod request_tests {
         response: ResponseMessage,
     ) where
         GenericServer<T>: RequestHandler,
-        U::Compressed: Serialize + DeserializeOwned + std::fmt::Debug,
+        U::Compressed: Serialize + DeserializeOwned,
     {
         let (ds, dr) = crossbeam_channel::unbounded();
         server.network_graph = NetworkGraph::from_edges([(0, 1, 1.), (1, 2, 1.)]);
@@ -72,13 +72,6 @@ mod request_tests {
         let resp: ResponseMessage = ResponseMessage::deserialize(data).unwrap();
         // println!("{:?} --- {:?}", resp, response);
         assert!(resp == response);
-    }
-
-    #[test]
-    fn test_response_id() {
-        assert!(generate_response_id(0, 0) == 0);
-        assert!(generate_response_id(0, 256) == 256);
-        assert!(generate_response_id(1, 23) == u64::from(u16::MAX) + 24);
     }
 
     #[test]

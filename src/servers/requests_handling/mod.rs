@@ -22,11 +22,11 @@ use wg_2024::{
 
 use super::{
     serialization::{defragment_deserialize_request, fragment_response},
-    GenericServer, Media, RequestHandler, Text, SID_MASK,
+    GenericServer, Media, RequestHandler, Text,
 };
 
-use crate::servers::TEXT_PATH;
-use crate::servers::{ServerType as ST, MEDIA_PATH};
+use crate::protocol_utils as network_protocol;
+use crate::servers::{ServerType as ST, MEDIA_PATH, TEXT_PATH};
 
 #[cfg(test)]
 mod test;
@@ -38,11 +38,6 @@ fn list_dir(path: &str) -> Result<Vec<String>, io::Error> {
         .filter(|p: &PathBuf| p.is_file())
         .map(|p: PathBuf| p.into_os_string().into_string().unwrap())
         .collect())
-}
-
-#[inline]
-fn generate_response_id(sid: u64, rid: u16) -> u64 {
-    (sid << 16) | u64::from(rid)
 }
 
 impl<T: ST> GenericServer<T> {
@@ -97,7 +92,7 @@ impl<T: ST> GenericServer<T> {
                         );
                         self.sent_history
                             .insert(sid, (src_id, i as u64, sz as u64, frag));
-                        self.session_id = (self.session_id + 1) & SID_MASK;
+                        self.session_id = network_protocol::next_sid(self.session_id);
                         let _ = next_hop.send(packet.clone());
                         let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
                     }
@@ -106,7 +101,7 @@ impl<T: ST> GenericServer<T> {
                         let sid: u64 = (self.session_id << 16) | u64::from(rid);
                         self.sent_history
                             .insert(sid, (src_id, i as u64, sz as u64, frag));
-                        self.session_id = (self.session_id + 1) & SID_MASK;
+                        self.session_id = network_protocol::next_sid(self.session_id);
                         self.pending_packets.push_back(sid);
                     }
                     error!(target: &self.target_topic, "Unable to find channel of designated nbr! pending response...");
