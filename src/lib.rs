@@ -1,6 +1,7 @@
-#![allow(dead_code)]
+// #![allow(dead_code)]
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
+#![deny(nonstandard_style)]
 //#![deny(missing_docs)]
 
 mod integration_test;

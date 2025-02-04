@@ -227,7 +227,7 @@ mod networking_tests {
     };
 
     use crate::servers::{
-        networking::test::graphmap_eq, GenericServer, NetworkGraph, Text, INITIAL_PDR,
+        networking::test::graphmap_eq, GenericServer, HistoryEntry, NetworkGraph, Text, INITIAL_PDR,
     };
 
     use crate::servers::test_utils::get_dummy_server_text;
@@ -593,7 +593,9 @@ mod networking_tests {
     #[test]
     fn test_flood_server_isolated() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
-        server.sent_history.insert(0, (2, 0, 1, [0; 128]));
+        server
+            .sent_history
+            .insert(0, HistoryEntry::new(vec![], 2, 0, 1, [0; 128]));
         let (ds, dr) = crossbeam_channel::unbounded();
         let (ss, sr) = crossbeam_channel::unbounded();
         let (_, ctrlr) = crossbeam_channel::unbounded();

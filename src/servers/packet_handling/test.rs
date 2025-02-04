@@ -7,7 +7,9 @@ mod packet_tests {
     };
 
     use crate::{
-        servers::{test_utils::get_dummy_server_text, NetworkGraph, Text, INITIAL_PDR},
+        servers::{
+            test_utils::get_dummy_server_text, HistoryEntry, NetworkGraph, Text, INITIAL_PDR,
+        },
         GenericServer,
     };
 
@@ -17,7 +19,7 @@ mod packet_tests {
         let ack: Ack = Ack { fragment_index: 0 };
         server
             .sent_history
-            .insert(0, (1, 0, 1, [0; FRAGMENT_DSIZE]));
+            .insert(0, HistoryEntry::new(vec![], 1, 0, 1, [0; FRAGMENT_DSIZE]));
         server.handle_ack(0, &ack);
         assert!(server.sent_history.is_empty());
     }
@@ -28,7 +30,7 @@ mod packet_tests {
         let ack: Ack = Ack { fragment_index: 0 };
         server
             .sent_history
-            .insert(0, (1, 0, 1, [0; FRAGMENT_DSIZE]));
+            .insert(0, HistoryEntry::new(vec![], 1, 0, 1, [0; FRAGMENT_DSIZE]));
         server.handle_ack(1, &ack);
         assert!(server.sent_history.len() == 1);
     }
@@ -38,7 +40,7 @@ mod packet_tests {
         let mut server: GenericServer<Text> = get_dummy_server_text();
         server
             .sent_history
-            .insert(0, (1, 0, 1, [0; FRAGMENT_DSIZE]));
+            .insert(0, HistoryEntry::new(vec![], 1, 0, 1, [0; FRAGMENT_DSIZE]));
         let nack: Nack = Nack {
             fragment_index: 0,
             nack_type: NackType::Dropped,
@@ -52,7 +54,7 @@ mod packet_tests {
         let mut server: GenericServer<Text> = get_dummy_server_text();
         server
             .sent_history
-            .insert(0, (2, 0, 1, [0; FRAGMENT_DSIZE]));
+            .insert(0, HistoryEntry::new(vec![], 2, 0, 1, [0; FRAGMENT_DSIZE]));
         let nack: Nack = Nack {
             fragment_index: 0,
             nack_type: NackType::Dropped,
@@ -80,7 +82,7 @@ mod packet_tests {
         let mut server: GenericServer<Text> = get_dummy_server_text();
         server
             .sent_history
-            .insert(0, (2, 0, 1, [0; FRAGMENT_DSIZE]));
+            .insert(0, HistoryEntry::new(vec![], 2, 0, 1, [0; FRAGMENT_DSIZE]));
         let nack: Nack = Nack {
             fragment_index: 0,
             nack_type: NackType::Dropped,
@@ -113,7 +115,7 @@ mod packet_tests {
         let mut server: GenericServer<Text> = get_dummy_server_text();
         server
             .sent_history
-            .insert(0, (1, 0, 1, [0; FRAGMENT_DSIZE]));
+            .insert(0, HistoryEntry::new(vec![], 1, 0, 1, [0; FRAGMENT_DSIZE]));
         let nack: Nack = Nack {
             fragment_index: 0,
             nack_type: NackType::ErrorInRouting(1),

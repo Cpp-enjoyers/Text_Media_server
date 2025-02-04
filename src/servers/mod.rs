@@ -31,11 +31,36 @@ mod test;
 #[cfg(test)]
 mod test_utils;
 
+#[derive(Debug, Clone)]
+struct HistoryEntry {
+    hops: Vec<NodeId>,
+    receiver_id: u8,
+    frag_idx: u64,
+    n_frags: u64,
+    frag: [u8; 128],
+}
+
+impl HistoryEntry {
+    fn new(
+        hops: Vec<NodeId>,
+        receiver_id: u8,
+        frag_idx: u64,
+        n_frags: u64,
+        frag: [u8; 128],
+    ) -> Self {
+        Self {
+            hops,
+            receiver_id,
+            frag_idx,
+            n_frags,
+            frag,
+        }
+    }
+}
+
 // maps (SenderId, rid) -> (#recv_fragments, fragments)
 type FragmentHistory = HashMap<(NodeId, u16), (u64, Vec<[u8; FRAGMENT_DSIZE]>)>;
-// maps sid -> (ReceiverId, frag_idx, #tot_frags, frag)
-// TODO
-type MessageHistory = HashMap<u64, (NodeId, u64, u64, [u8; FRAGMENT_DSIZE])>;
+type MessageHistory = HashMap<u64, HistoryEntry>;
 type FloodHistory = HashMap<NodeId, RingBuffer<u64>>;
 type NetworkGraph = DiGraphMap<NodeId, f64>;
 type PendingQueue = VecDeque<u64>;
@@ -186,15 +211,21 @@ where
                 info!(target: &self.target_topic, "Starting new flood request to construct network");
                 self.flood();
             } else if self.graph_updated && !self.pending_packets.is_empty() {
-                if let Some(sid) = self.pending_packets.pop_back() {
-                    info!(target: &self.target_topic, "Trying to resend packet with sid: {sid}");
-                    let fragment: Option<&(u8, u64, u64, [u8; FRAGMENT_DSIZE])> =
-                        self.sent_history.get(&sid);
+                let sid = self.pending_packets.pop_back().unwrap();
+                info!(target: &self.target_topic, "Trying to resend packet with sid: {sid}");
+                let fragment: Option<&HistoryEntry> = self.sent_history.get(&sid);
 
-                    if let Some(t) = fragment {
-                        let (src_id, i, sz, frag) = *t;
-                        self.resend_packet(sid, src_id, i, sz, frag);
-                    }
+                if let Some(entry) = fragment {
+                    let HistoryEntry {
+                        hops: _,
+                        receiver_id,
+                        frag_idx,
+                        n_frags,
+                        frag,
+                    } = *entry;
+                    self.resend_packet(sid, receiver_id, frag_idx, n_frags, frag);
+                } else {
+                    warn!(target: &self.target_topic, "CRITICAL: cannot find pending packet in sent history!");
                 }
             } else {
                 select_biased! {

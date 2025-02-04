@@ -22,7 +22,7 @@ use wg_2024::{
 
 use super::{
     serialization::{defragment_deserialize_request, fragment_response},
-    GenericServer, Media, RequestHandler, Text,
+    GenericServer, HistoryEntry, Media, RequestHandler, Text,
 };
 
 use crate::protocol_utils as network_protocol;
@@ -83,15 +83,23 @@ impl<T: ST> GenericServer<T> {
                 let sz: usize = data.len();
                 if let Some(next_hop) = self.packet_send.get(&resp_hdr.hops[1]) {
                     for (i, frag) in data.into_iter().enumerate() {
-                        let sid: u64 = (self.session_id << 16) | u64::from(rid);
-                        // wtf is this constructor???
+                        let sid: u64 = network_protocol::generate_response_id(self.session_id, rid);
                         let packet: Packet = Packet::new_fragment(
                             resp_hdr.clone(),
                             sid,
                             Fragment::new(i as u64, sz as u64, frag),
                         );
-                        self.sent_history
-                            .insert(sid, (src_id, i as u64, sz as u64, frag));
+                        // (src_id, i as u64, sz as u64, frag)
+                        self.sent_history.insert(
+                            sid,
+                            HistoryEntry::new(
+                                resp_hdr.hops.clone(),
+                                src_id,
+                                i as u64,
+                                sz as u64,
+                                frag,
+                            ),
+                        );
                         self.session_id = network_protocol::next_sid(self.session_id);
                         let _ = next_hop.send(packet.clone());
                         let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
@@ -99,8 +107,16 @@ impl<T: ST> GenericServer<T> {
                 } else {
                     for (i, frag) in data.into_iter().enumerate() {
                         let sid: u64 = (self.session_id << 16) | u64::from(rid);
-                        self.sent_history
-                            .insert(sid, (src_id, i as u64, sz as u64, frag));
+                        self.sent_history.insert(
+                            sid,
+                            HistoryEntry::new(
+                                resp_hdr.hops.clone(),
+                                src_id,
+                                i as u64,
+                                sz as u64,
+                                frag,
+                            ),
+                        );
                         self.session_id = network_protocol::next_sid(self.session_id);
                         self.pending_packets.push_back(sid);
                     }
@@ -193,7 +209,7 @@ impl RequestHandler for GenericServer<Text> {
             info!(target: &self.target_topic, "Sending response: {resp:?}");
             self.send_response(srch, src_id, rid, &resp);
         } else {
-            error!(target: &self.target_topic, "Received undeserializable request, sending invalid response");
+            error!(target: &self.target_topic, "Received undeserializable request, dropping request...");
         }
         // self.session_id = (self.session_id + 1) & SID_MASK;
     }
@@ -244,8 +260,7 @@ impl RequestHandler for GenericServer<Media> {
             info!(target: &self.target_topic, "Sending response: {resp:?}");
             self.send_response(srch, src_id, rid, &resp);
         } else {
-            error!(target: &self.target_topic, "Received undeserializable request, sending invalid response");
+            error!(target: &self.target_topic, "Received undeserializable request, dropping request...");
         }
-        // self.session_id = (self.session_id + 1) & SID_MASK;
     }
 }

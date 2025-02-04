@@ -7,7 +7,7 @@ use wg_2024::{
 };
 
 use super::{GenericServer, RequestHandler, ServerType};
-use crate::protocol_utils as network_protocol;
+use crate::{protocol_utils as network_protocol, servers::HistoryEntry};
 
 #[cfg(test)]
 mod test;
@@ -42,11 +42,17 @@ where
             }
         }
 
-        let fragment: Option<&(u8, u64, u64, [u8; FRAGMENT_DSIZE])> = self.sent_history.get(&sid);
+        let fragment: Option<&HistoryEntry> = self.sent_history.get(&sid);
 
-        if let Some(t) = fragment {
-            let (src_id, i, sz, frag) = *t;
-            self.resend_packet(sid, src_id, i, sz, frag);
+        if let Some(entry) = fragment {
+            let HistoryEntry {
+                hops: _,
+                receiver_id,
+                frag_idx,
+                n_frags,
+                frag,
+            } = *entry;
+            self.resend_packet(sid, receiver_id, frag_idx, n_frags, frag);
         } else {
             warn!(target: &self.target_topic, "Received Nack with unknown sid: {sid}");
         }
