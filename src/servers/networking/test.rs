@@ -39,7 +39,7 @@ mod routing_tests {
 
     use crate::servers::{
         networking::test::graphmap_eq, test_utils::get_dummy_server_text, GenericServer,
-        NetworkGraph, Text,
+        NetworkGraph, Text, INITIAL_PDR,
     };
 
     /// compares two graphs
@@ -75,7 +75,12 @@ mod routing_tests {
         assert!(server.check_and_add_edge(1, 2));
         assert!(graph_eq(
             &server.network_graph.into_graph::<NodeId>(),
-            &NetworkGraph::from_edges([(0, 1, 1.), (1, 0, 1.), (1, 2, 1.),]).into_graph()
+            &NetworkGraph::from_edges([
+                (0, 1, INITIAL_PDR),
+                (1, 0, INITIAL_PDR),
+                (1, 2, INITIAL_PDR),
+            ])
+            .into_graph()
         ));
     }
 
@@ -89,7 +94,8 @@ mod routing_tests {
         assert!(server.check_and_add_edge(1, 2));
         assert!(graph_eq(
             &server.network_graph.into_graph::<NodeId>(),
-            &NetworkGraph::from_edges([(0, 1, 23.), (1, 0, 1.), (1, 2, 1.),]).into_graph()
+            &NetworkGraph::from_edges([(0, 1, 23.), (1, 0, INITIAL_PDR), (1, 2, INITIAL_PDR),])
+                .into_graph()
         ));
     }
 
@@ -114,16 +120,16 @@ mod routing_tests {
         ];
         server.update_network_from_flood(&fr);
         let mut res: NetworkGraph = NetworkGraph::from_edges([
-            (0, 1, 1.),
-            (1, 2, 1.),
-            (2, 1, 1.),
-            (3, 2, 1.),
-            (2, 3, 1.),
-            (3, 4, 1.),
+            (0, 1, INITIAL_PDR),
+            (1, 2, INITIAL_PDR),
+            (2, 1, INITIAL_PDR),
+            (3, 2, INITIAL_PDR),
+            (2, 3, INITIAL_PDR),
+            (3, 4, INITIAL_PDR),
         ]);
         assert!(graphmap_eq(&server.network_graph, &res,));
         fr.path_trace = vec![(0, NodeType::Server), (5, NodeType::Drone)];
-        res.add_edge(0, 5, 1.);
+        res.add_edge(0, 5, INITIAL_PDR);
         server.update_network_from_flood(&fr);
         assert!(graphmap_eq(&server.network_graph, &res,));
     }
@@ -134,20 +140,20 @@ mod routing_tests {
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 3u8, 4u8, 5u8, 0u8], 0);
         server.update_network_from_header(&hdr);
         let mut res: NetworkGraph = NetworkGraph::from_edges([
-            (3, 1, 1.),
-            (3, 4, 1.),
-            (4, 3, 1.),
-            (5, 4, 1.),
-            (4, 5, 1.),
-            (0, 5, 1.),
+            (3, 1, INITIAL_PDR),
+            (3, 4, INITIAL_PDR),
+            (4, 3, INITIAL_PDR),
+            (5, 4, INITIAL_PDR),
+            (4, 5, INITIAL_PDR),
+            (0, 5, INITIAL_PDR),
         ]);
         println!("{:?}", server.network_graph);
         println!("{:?}", res);
         assert!(graphmap_eq(&server.network_graph, &res));
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 2u8, 0u8], 0);
         server.update_network_from_header(&hdr);
-        res.add_edge(0, 2, 1.);
-        res.add_edge(2, 1, 1.);
+        res.add_edge(0, 2, INITIAL_PDR);
+        res.add_edge(2, 1, INITIAL_PDR);
         assert!(graphmap_eq(&server.network_graph, &res));
     }
 
@@ -179,8 +185,12 @@ mod routing_tests {
     fn test_get_srch_from_graph() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 3u8, 4u8, 5u8, 0u8], 0);
-        server.network_graph =
-            NetworkGraph::from_edges([(3, 1, 1.), (0, 3, 1.), (3, 4, 1.), (4, 3, 1.)]);
+        server.network_graph = NetworkGraph::from_edges([
+            (3, 1, INITIAL_PDR),
+            (0, 3, INITIAL_PDR),
+            (3, 4, INITIAL_PDR),
+            (4, 3, INITIAL_PDR),
+        ]);
         assert_eq!(
             server.get_routing_hdr_with_hint(&hdr, 1).hops,
             vec![0u8, 3u8, 1u8]
@@ -191,7 +201,7 @@ mod routing_tests {
     fn test_get_srch_from_srch() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
         let hdr: SourceRoutingHeader = SourceRoutingHeader::new(vec![1u8, 3u8, 4u8, 5u8, 0u8], 0);
-        server.network_graph = NetworkGraph::from_edges([(0, 3, 1.), (3, 4, 1.)]);
+        server.network_graph = NetworkGraph::from_edges([(0, 3, INITIAL_PDR), (3, 4, INITIAL_PDR)]);
         assert_eq!(
             server.get_routing_hdr_with_hint(&hdr, 1).hops,
             vec![0u8, 5u8, 4u8, 3u8, 1u8]
@@ -216,7 +226,9 @@ mod networking_tests {
         packet::{FloodResponse, Nack, NackType, NodeType, Packet, PacketType},
     };
 
-    use crate::servers::{networking::test::graphmap_eq, GenericServer, NetworkGraph, Text};
+    use crate::servers::{
+        networking::test::graphmap_eq, GenericServer, NetworkGraph, Text, INITIAL_PDR,
+    };
 
     use crate::servers::test_utils::get_dummy_server_text;
 
@@ -260,7 +272,7 @@ mod networking_tests {
         server.handle_flood_response(SourceRoutingHeader::new(vec![2, 1, 0], 2), 0, response);
         assert!(graphmap_eq(
             &server.network_graph,
-            &NetworkGraph::from_edges([(0, 1, 1.), (1, 2, 1.),])
+            &NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR),])
         ));
     }
 
@@ -415,15 +427,15 @@ mod networking_tests {
         assert!(graphmap_eq(
             &server.network_graph,
             &NetworkGraph::from_edges([
-                (1, 11, 1.),
-                (11, 12, 1.),
-                (12, 11, 1.),
-                (11, 13, 1.),
-                (13, 11, 1.),
-                (13, 14, 1.),
-                (14, 13, 1.),
-                (11, 14, 1.),
-                (14, 11, 1.),
+                (1, 11, INITIAL_PDR),
+                (11, 12, INITIAL_PDR),
+                (12, 11, INITIAL_PDR),
+                (11, 13, INITIAL_PDR),
+                (13, 11, INITIAL_PDR),
+                (13, 14, INITIAL_PDR),
+                (14, 13, INITIAL_PDR),
+                (11, 14, INITIAL_PDR),
+                (14, 11, INITIAL_PDR),
             ])
         ));
     }
@@ -562,18 +574,18 @@ mod networking_tests {
         assert!(graphmap_eq(
             &server1.network_graph,
             &NetworkGraph::from_edges([
-                (1, 12, 1.),
-                (1, 11, 1.),
-                (12, 11, 1.),
-                (11, 12, 1.),
-                (11, 13, 1.),
-                (13, 11, 1.),
-                (11, 14, 1.),
-                (14, 11, 1.),
-                (14, 13, 1.),
-                (13, 14, 1.),
-                (13, 2, 1.),
-                (14, 2, 1.),
+                (1, 12, INITIAL_PDR),
+                (1, 11, INITIAL_PDR),
+                (12, 11, INITIAL_PDR),
+                (11, 12, INITIAL_PDR),
+                (11, 13, INITIAL_PDR),
+                (13, 11, INITIAL_PDR),
+                (11, 14, INITIAL_PDR),
+                (14, 11, INITIAL_PDR),
+                (14, 13, INITIAL_PDR),
+                (13, 14, INITIAL_PDR),
+                (13, 2, INITIAL_PDR),
+                (14, 2, INITIAL_PDR),
             ])
         ));
     }
@@ -608,7 +620,7 @@ mod networking_tests {
             neighbours1,
             0.0,
         );
-        server.network_graph.add_edge(1, 2, 1.);
+        server.network_graph.add_edge(1, 2, INITIAL_PDR);
         thread::spawn(move || {
             drone14.run();
         });

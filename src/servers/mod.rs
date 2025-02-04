@@ -42,7 +42,7 @@ type PendingQueue = VecDeque<u64>;
 
 const TEXT_PATH: &str = "./public/";
 const MEDIA_PATH: &str = "./media/";
-const INTIAL_PDR: f64 = 1.; // Beta(1, 1), is a baesyan approach better?
+const INITIAL_PDR: f64 = 0.5; // Beta(1, 1), is a baesyan approach better?
 
 pub trait ServerType {}
 
@@ -122,8 +122,8 @@ where
         match command {
             ServerCommand::AddSender(node_id, channel) => {
                 self.packet_send.insert(node_id, channel);
-                self.network_graph.add_edge(self.id, node_id, 1.);
-                self.network_graph.add_edge(node_id, self.id, 1.);
+                self.network_graph.add_edge(self.id, node_id, INITIAL_PDR);
+                self.network_graph.add_edge(node_id, self.id, INITIAL_PDR);
                 self.need_flood = true;
                 info!(target: &self.target_topic, "Received add sender command, sender id: {node_id}");
             }
@@ -157,8 +157,8 @@ where
     {
         let mut network_graph: DiGraphMap<NodeId, f64> = DiGraphMap::new();
         for did in packet_send.keys() {
-            network_graph.add_edge(id, *did, 1.);
-            // network_graph.add_edge(*did, id, 1.);
+            network_graph.add_edge(id, *did, INITIAL_PDR);
+            // network_graph.add_edge(*did, id, INITIAL_PDR);
         }
 
         GenericServer {

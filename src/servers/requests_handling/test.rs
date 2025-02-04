@@ -20,7 +20,7 @@ mod request_tests {
             requests_handling::list_dir,
             serialization::fragment_response,
             test_utils::{get_dummy_server_media, get_dummy_server_text},
-            NetworkGraph, RequestHandler, ServerType as ST, MEDIA_PATH, TEXT_PATH,
+            NetworkGraph, RequestHandler, ServerType as ST, INITIAL_PDR, MEDIA_PATH, TEXT_PATH,
         },
         GenericServer,
     };
@@ -35,7 +35,7 @@ mod request_tests {
         U::Compressed: Serialize + DeserializeOwned,
     {
         let (ds, dr) = crossbeam_channel::unbounded();
-        server.network_graph = NetworkGraph::from_edges([(0, 1, 1.), (1, 2, 1.)]);
+        server.network_graph = NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]);
         server.packet_send.insert(1, ds);
         let data: Vec<[u8; 128]> = fragment_response(request.serialize().unwrap());
         let total: u64 = u64::try_from(data.len()).unwrap();
