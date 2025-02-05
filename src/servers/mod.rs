@@ -1,6 +1,6 @@
 /*
  * TODOS: ETX with packet count + exponentially moving average
- *        Multithreading?
+ *        Multithreading (prob there's no time >.<)
  */
 
 use std::{
@@ -68,6 +68,9 @@ type PendingQueue = VecDeque<u64>;
 const TEXT_PATH: &str = "./public/";
 const MEDIA_PATH: &str = "./media/";
 const INITIAL_PDR: f64 = 0.5; // Beta(1, 1), is a baesyan approach better?
+const DEFAULT_WINDOW_SZ: u32 = 12;
+const DEFAULT_ALPHA: f64 = 0.35;
+const DEFAULT_BETA: f64 = 1. - DEFAULT_ALPHA;
 
 pub trait ServerType {}
 
