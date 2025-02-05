@@ -14,7 +14,7 @@ use wg_2024::{
 };
 
 use crate::servers::{
-    networking::test::graphmap_eq, GenericServer, HistoryEntry, NetworkGraph, Text, INITIAL_PDR,
+    networking::test::graphmap_eq, GenericServer, HistoryEntry, NetworkGraph, Text, INITIAL_ETX,
 };
 
 use crate::servers::test_utils::get_dummy_server_text;
@@ -58,8 +58,8 @@ fn test_handle_my_flood_response() {
     };
     server.handle_flood_response(SourceRoutingHeader::new(vec![2, 1, 0], 2), 0, response);
     assert!(graphmap_eq(
-        &server.network_graph,
-        &NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR),])
+        &server.network_graph.get_graph(),
+        &NetworkGraph::from_edges([(0, 1, INITIAL_ETX), (1, 2, INITIAL_ETX),])
     ));
 }
 
@@ -212,17 +212,17 @@ fn test_flood_small_topology() {
     }
 
     assert!(graphmap_eq(
-        &server.network_graph,
+        &server.network_graph.get_graph(),
         &NetworkGraph::from_edges([
-            (1, 11, INITIAL_PDR),
-            (11, 12, INITIAL_PDR),
-            (12, 11, INITIAL_PDR),
-            (11, 13, INITIAL_PDR),
-            (13, 11, INITIAL_PDR),
-            (13, 14, INITIAL_PDR),
-            (14, 13, INITIAL_PDR),
-            (11, 14, INITIAL_PDR),
-            (14, 11, INITIAL_PDR),
+            (1, 11, INITIAL_ETX),
+            (11, 12, INITIAL_ETX),
+            (12, 11, INITIAL_ETX),
+            (11, 13, INITIAL_ETX),
+            (13, 11, INITIAL_ETX),
+            (13, 14, INITIAL_ETX),
+            (14, 13, INITIAL_ETX),
+            (11, 14, INITIAL_ETX),
+            (14, 11, INITIAL_ETX),
         ])
     ));
 }
@@ -359,20 +359,20 @@ fn test_flood_big_topology() {
     }
 
     assert!(graphmap_eq(
-        &server1.network_graph,
+        &server1.network_graph.get_graph(),
         &NetworkGraph::from_edges([
-            (1, 12, INITIAL_PDR),
-            (1, 11, INITIAL_PDR),
-            (12, 11, INITIAL_PDR),
-            (11, 12, INITIAL_PDR),
-            (11, 13, INITIAL_PDR),
-            (13, 11, INITIAL_PDR),
-            (11, 14, INITIAL_PDR),
-            (14, 11, INITIAL_PDR),
-            (14, 13, INITIAL_PDR),
-            (13, 14, INITIAL_PDR),
-            (13, 2, INITIAL_PDR),
-            (14, 2, INITIAL_PDR),
+            (1, 12, INITIAL_ETX),
+            (1, 11, INITIAL_ETX),
+            (12, 11, INITIAL_ETX),
+            (11, 12, INITIAL_ETX),
+            (11, 13, INITIAL_ETX),
+            (13, 11, INITIAL_ETX),
+            (11, 14, INITIAL_ETX),
+            (14, 11, INITIAL_ETX),
+            (14, 13, INITIAL_ETX),
+            (13, 14, INITIAL_ETX),
+            (13, 2, INITIAL_ETX),
+            (14, 2, INITIAL_ETX),
         ])
     ));
 }
@@ -397,7 +397,7 @@ fn test_flood_server_isolated() {
     assert!(!server.need_flood);
     server.packet_recv = sr.clone();
     assert!(graphmap_eq(
-        &server.network_graph,
+        &server.network_graph.get_graph(),
         &NetworkGraph::from_edges::<[(u8, u8, f64); 0]>([])
     ));
     let neighbours1: HashMap<u8, Sender<Packet>> = HashMap::from([(0, ss.clone())]);
@@ -409,7 +409,7 @@ fn test_flood_server_isolated() {
         neighbours1,
         0.0,
     );
-    server.network_graph.add_edge(1, 2, INITIAL_PDR);
+    server.network_graph.check_and_add_edge(1, 2);
     thread::spawn(move || {
         drone14.run();
     });

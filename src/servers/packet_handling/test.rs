@@ -8,7 +8,8 @@ mod packet_tests {
 
     use crate::{
         servers::{
-            test_utils::get_dummy_server_text, HistoryEntry, NetworkGraph, Text, INITIAL_PDR,
+            self, networking::routing::RoutingTable, test_utils::get_dummy_server_text,
+            HistoryEntry, NetworkGraph, Text, INITIAL_PDR,
         },
         GenericServer,
     };
@@ -59,7 +60,10 @@ mod packet_tests {
             fragment_index: 0,
             nack_type: NackType::Dropped,
         };
-        server.network_graph = NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]);
+        server.network_graph = RoutingTable::new_with_graph(
+            NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]),
+            servers::default_estimator(),
+        );
         let (ds, dr) = crossbeam_channel::unbounded();
         server.packet_send.insert(1, ds.clone());
         server.handle_nack(0, &nack);
@@ -87,7 +91,10 @@ mod packet_tests {
             fragment_index: 0,
             nack_type: NackType::Dropped,
         };
-        server.network_graph = NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]);
+        server.network_graph = RoutingTable::new_with_graph(
+            NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]),
+            servers::default_estimator(),
+        );
         let (ds, dr) = crossbeam_channel::unbounded();
         server.packet_send.insert(1, ds.clone());
         server.handle_nack(0, &nack);
@@ -120,10 +127,13 @@ mod packet_tests {
             fragment_index: 0,
             nack_type: NackType::ErrorInRouting(1),
         };
-        server.network_graph = NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]);
+        server.network_graph = RoutingTable::new_with_graph(
+            NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]),
+            servers::default_estimator(),
+        );
         server.handle_nack(0, &nack);
         assert_eq!(server.pending_packets.pop_back().unwrap(), 0);
-        assert!(!server.network_graph.contains_node(1));
+        assert!(!server.network_graph.get_graph().contains_node(1));
     }
 
     #[test]

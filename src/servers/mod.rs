@@ -16,6 +16,7 @@ use common::{
 };
 use crossbeam_channel::{select_biased, Receiver, Sender};
 use log::{info, warn};
+use networking::routing::{PdrEstimator, RoutingTable};
 use petgraph::prelude::DiGraphMap;
 use wg_2024::{
     network::{NodeId, SourceRoutingHeader},
@@ -68,6 +69,7 @@ type PendingQueue = VecDeque<u64>;
 const TEXT_PATH: &str = "./public/";
 const MEDIA_PATH: &str = "./media/";
 const INITIAL_PDR: f64 = 0.5; // Beta(1, 1), is a baesyan approach better?
+const INITIAL_ETX: f64 = 1. / INITIAL_PDR;
 const DEFAULT_WINDOW_SZ: u32 = 12;
 const DEFAULT_ALPHA: f64 = 0.35;
 const DEFAULT_BETA: f64 = 1. - DEFAULT_ALPHA;
@@ -106,9 +108,15 @@ pub struct GenericServer<T: ServerType> {
     flood_history: FloodHistory,
     fragment_history: FragmentHistory,
     sent_history: MessageHistory,
-    network_graph: NetworkGraph,
+    network_graph: RoutingTable,
     pending_packets: PendingQueue,
     _marker: PhantomData<T>,
+}
+
+fn default_estimator() -> PdrEstimator {
+    PdrEstimator::new(DEFAULT_WINDOW_SZ, |old: f64, acks: u32, nacks: u32| {
+        DEFAULT_ALPHA * f64::from(acks) / f64::from(acks + nacks) + DEFAULT_BETA * old
+    })
 }
 
 impl<T: ServerType> GenericServer<T>
@@ -150,8 +158,8 @@ where
         match command {
             ServerCommand::AddSender(node_id, channel) => {
                 self.packet_send.insert(node_id, channel);
-                self.network_graph.add_edge(self.id, node_id, INITIAL_PDR);
-                self.network_graph.add_edge(node_id, self.id, INITIAL_PDR);
+                self.network_graph.check_and_add_edge(self.id, node_id);
+                // self.network_graph.check_and_add_edge(node_id, self.id);
                 self.need_flood = true;
                 info!(target: &self.target_topic, "Received add sender command, sender id: {node_id}");
             }
@@ -183,9 +191,9 @@ where
     where
         Self: Sized,
     {
-        let mut network_graph: DiGraphMap<NodeId, f64> = DiGraphMap::new();
+        let mut network_graph: RoutingTable = RoutingTable::new(default_estimator());
         for did in packet_send.keys() {
-            network_graph.add_edge(id, *did, INITIAL_PDR);
+            network_graph.check_and_add_edge(id, *did);
             // network_graph.add_edge(*did, id, INITIAL_PDR);
         }
 

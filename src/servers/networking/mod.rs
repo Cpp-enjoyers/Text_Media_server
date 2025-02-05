@@ -9,7 +9,7 @@ use wg_2024::{
 use super::{GenericServer, ServerType};
 use crate::protocol_utils as network_protocol;
 
-mod routing;
+pub(crate) mod routing;
 #[cfg(test)]
 mod test;
 

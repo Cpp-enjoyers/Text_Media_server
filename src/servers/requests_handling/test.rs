@@ -17,6 +17,8 @@ mod request_tests {
 
     use crate::{
         servers::{
+            self,
+            networking::routing::RoutingTable,
             requests_handling::list_dir,
             serialization::fragment_response,
             test_utils::{get_dummy_server_media, get_dummy_server_text},
@@ -35,7 +37,10 @@ mod request_tests {
         U::Compressed: Serialize + DeserializeOwned,
     {
         let (ds, dr) = crossbeam_channel::unbounded();
-        server.network_graph = NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]);
+        server.network_graph = RoutingTable::new_with_graph(
+            NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]),
+            servers::default_estimator(),
+        );
         server.packet_send.insert(1, ds);
         let data: Vec<[u8; 128]> = fragment_response(request.serialize().unwrap());
         let total: u64 = u64::try_from(data.len()).unwrap();

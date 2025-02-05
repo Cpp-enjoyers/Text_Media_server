@@ -8,7 +8,7 @@ use wg_2024::{
     packet::{FloodResponse, NodeType},
 };
 
-use crate::servers::{GenericServer, NetworkGraph, ServerType, INITIAL_PDR};
+use crate::servers::{GenericServer, NetworkGraph, ServerType, INITIAL_ETX, INITIAL_PDR};
 
 #[cfg(test)]
 mod test;
@@ -44,6 +44,8 @@ pub(crate) struct RoutingTable /* <const WINDOW_SIZE: u8> */ {
 }
 
 impl RoutingTable {
+    const EPSILON: f64 = 1e-6;
+
     #[inline]
     #[must_use]
     pub(crate) fn new(pdr_estimator: PdrEstimator) -> Self {
@@ -55,14 +57,23 @@ impl RoutingTable {
     }
 
     #[must_use]
-    pub(crate) fn new_with_graph(graph: NetworkGraph, pdr_estimator: PdrEstimator) -> Self {
+    pub(crate) fn new_with_graph(mut graph: NetworkGraph, pdr_estimator: PdrEstimator) -> Self {
         let it = graph.nodes().map(|n: u8| (n, PdrEntry(INITIAL_PDR, 0, 0)));
         let pdr_table: HashMap<NodeId, PdrEntry> = it.collect();
+        // guarantee consistency
+        for (_, _, w) in graph.all_edges_mut() {
+            *w = INITIAL_ETX;
+        }
         Self {
             graph,
             pdr_table,
             pdr_estimator,
         }
+    }
+
+    #[inline]
+    pub(crate) fn get_graph(&self) -> &NetworkGraph {
+        &self.graph
     }
 
     #[inline]
@@ -77,7 +88,7 @@ impl RoutingTable {
         self.pdr_table
             .entry(to)
             .or_insert(PdrEntry(INITIAL_PDR, 0, 0));
-        self.graph.add_edge(from, to, 1. / INITIAL_PDR)
+        self.graph.add_edge(from, to, INITIAL_ETX)
     }
 
     pub(crate) fn check_and_add_edge(&mut self, from: NodeId, to: NodeId) -> bool {
@@ -101,7 +112,7 @@ impl RoutingTable {
                 entry.0 = (self.pdr_estimator.estimator)(entry.0, entry.1, entry.2);
                 entry.1 = 0;
                 entry.2 = 0;
-                let etx: f64 = if entry.0 == 0. {
+                let etx: f64 = if entry.0 < Self::EPSILON {
                     f64::INFINITY
                 } else {
                     1. / entry.0
@@ -137,11 +148,9 @@ impl RoutingTable {
 }
 
 impl<T: ServerType> GenericServer<T> {
-    // TODO remove if too hard to do ETX
+    #[inline]
     pub(super) fn check_and_add_edge(&mut self, from: u8, to: u8) -> bool {
-        (!self.network_graph.contains_edge(from, to))
-            .then(|| self.network_graph.add_edge(from, to, INITIAL_PDR))
-            .is_some()
+        self.network_graph.check_and_add_edge(from, to)
     }
 
     pub(crate) fn update_network_from_flood(&mut self, fr: &FloodResponse) {
@@ -184,14 +193,7 @@ impl<T: ServerType> GenericServer<T> {
     }
 
     pub(crate) fn get_route(&self, dest: NodeId) -> Option<Vec<NodeId>> {
-        astar(
-            &self.network_graph,
-            self.id,
-            |finish| finish == dest,
-            |e| *e.weight(),
-            |_| 0.,
-        )
-        .map(|(_, p)| p)
+        self.network_graph.get_route(self.id, dest)
     }
 
     pub(crate) fn get_routing_hdr_with_hint(
