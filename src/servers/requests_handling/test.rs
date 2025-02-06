@@ -17,7 +17,13 @@ mod request_tests {
 
     use crate::{
         servers::{
-            self, networking::routing::RoutingTable, requests_handling::list_dir, serialization::fragment_response, test_utils::{get_dummy_server_media, get_dummy_server_text}, HistoryEntry, NetworkGraph, RequestHandler, ServerType as ST, INITIAL_PDR, MEDIA_PATH, TEXT_PATH
+            self,
+            networking::routing::RoutingTable,
+            requests_handling::list_dir,
+            serialization::fragment_response,
+            test_utils::{get_dummy_server_media, get_dummy_server_text},
+            HistoryEntry, NetworkGraph, RequestHandler, ServerType as ST, INITIAL_PDR, MEDIA_PATH,
+            TEXT_PATH,
         },
         GenericServer,
     };
@@ -83,10 +89,29 @@ mod request_tests {
     #[test]
     fn test_resend_route_update() {
         let mut server: GenericServer<servers::Text> = get_dummy_server_text();
-        let fr: FloodResponse = FloodResponse { flood_id: 0, path_trace: vec![(0, NodeType::Server), (1, NodeType::Drone), (2, NodeType::Client)] };
+        let fr: FloodResponse = FloodResponse {
+            flood_id: 0,
+            path_trace: vec![
+                (0, NodeType::Server),
+                (1, NodeType::Drone),
+                (2, NodeType::Client),
+            ],
+        };
         server.update_network_from_flood(&fr);
-        server.sent_history.insert(0, HistoryEntry { hops: vec![0, 2], receiver_id: 2, frag_idx: 0, n_frags: 1, frag: [0; 128] });
-        let nack: Nack = Nack { fragment_index: 0, nack_type: NackType::Dropped };
+        server.sent_history.insert(
+            0,
+            HistoryEntry {
+                hops: vec![0, 2],
+                receiver_id: 2,
+                frag_idx: 0,
+                n_frags: 1,
+                frag: [0; 128],
+            },
+        );
+        let nack: Nack = Nack {
+            fragment_index: 0,
+            nack_type: NackType::Dropped,
+        };
         let (ds, _) = crossbeam_channel::unbounded();
         let cmd: ServerCommand = ServerCommand::AddSender(1, ds.clone());
         server.handle_command(cmd);
@@ -97,11 +122,23 @@ mod request_tests {
     #[test]
     fn test_resend_route_no_update() {
         let mut server: GenericServer<servers::Text> = get_dummy_server_text();
-        server.sent_history.insert(0, HistoryEntry { hops: vec![0, 2], receiver_id: 2, frag_idx: 0, n_frags: 1, frag: [0; 128] });
-        let nack: Nack = Nack { fragment_index: 0, nack_type: NackType::Dropped };
+        server.sent_history.insert(
+            0,
+            HistoryEntry {
+                hops: vec![0, 2],
+                receiver_id: 2,
+                frag_idx: 0,
+                n_frags: 1,
+                frag: [0; 128],
+            },
+        );
+        let nack: Nack = Nack {
+            fragment_index: 0,
+            nack_type: NackType::Dropped,
+        };
         server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
         assert!(server.sent_history.get(&0).unwrap().hops == vec![0, 2]);
-    }    
+    }
 
     #[test]
     fn test_text_server_handle_type_request() {

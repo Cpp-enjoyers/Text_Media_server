@@ -9,7 +9,10 @@ use wg_2024::{
 };
 
 use crate::servers::{
-    self, networking::{routing::RoutingTable, test::graphmap_eq}, test_utils::get_dummy_server_text, GenericServer, HistoryEntry, NetworkGraph, Text, DEFAULT_WINDOW_SZ, INITIAL_ETX, INITIAL_PDR
+    self,
+    networking::{routing::RoutingTable, test::graphmap_eq},
+    test_utils::get_dummy_server_text,
+    GenericServer, HistoryEntry, NetworkGraph, Text, DEFAULT_WINDOW_SZ, INITIAL_ETX, INITIAL_PDR,
 };
 
 /// compares two graphs
@@ -190,10 +193,30 @@ fn test_graph_consistency() {
 #[test]
 fn test_etx_nacks_update_to_inf_and_back() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
-    let fr: FloodResponse = FloodResponse { flood_id: 0, path_trace: vec![(0, NodeType::Server), (1, NodeType::Drone), (2, NodeType::Drone), (3, NodeType::Client)] };
+    let fr: FloodResponse = FloodResponse {
+        flood_id: 0,
+        path_trace: vec![
+            (0, NodeType::Server),
+            (1, NodeType::Drone),
+            (2, NodeType::Drone),
+            (3, NodeType::Client),
+        ],
+    };
     server.update_network_from_flood(&fr);
-    server.sent_history.insert(0, HistoryEntry { hops: vec![0, 2], receiver_id: 2, frag_idx: 0, n_frags: 1, frag: [0; 128] });
-    let nack: Nack = Nack { fragment_index: 0, nack_type: NackType::Dropped };
+    server.sent_history.insert(
+        0,
+        HistoryEntry {
+            hops: vec![0, 2],
+            receiver_id: 2,
+            frag_idx: 0,
+            n_frags: 1,
+            frag: [0; 128],
+        },
+    );
+    let nack: Nack = Nack {
+        fragment_index: 0,
+        nack_type: NackType::Dropped,
+    };
     let (ds, _) = crossbeam_channel::unbounded();
     let cmd: ServerCommand = ServerCommand::AddSender(1, ds.clone());
     server.handle_command(cmd);
@@ -205,11 +228,20 @@ fn test_etx_nacks_update_to_inf_and_back() {
     assert!(server.sent_history.get(&0).unwrap().hops == vec![0, 1, 2]);
     server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
     assert!(server.sent_history.get(&0).unwrap().hops == vec![0, 1, 2]);
-    for i in 1..DEFAULT_WINDOW_SZ * 2{
-        server.sent_history.insert(i as u64, HistoryEntry { hops: vec![0, 1, 2], receiver_id: 2, frag_idx: 0, n_frags: 1, frag: [0; 128] });
+    for i in 1..DEFAULT_WINDOW_SZ * 2 {
+        server.sent_history.insert(
+            i as u64,
+            HistoryEntry {
+                hops: vec![0, 1, 2],
+                receiver_id: 2,
+                frag_idx: 0,
+                n_frags: 1,
+                frag: [0; 128],
+            },
+        );
     }
     let ack: Ack = Ack { fragment_index: 0 };
-    for i in 0..DEFAULT_WINDOW_SZ * 2{
+    for i in 0..DEFAULT_WINDOW_SZ * 2 {
         server.handle_ack(i as u64, &ack);
     }
     assert!(*server.network_graph.get_graph().edge_weight(1, 2).unwrap() != f64::INFINITY);
@@ -218,10 +250,27 @@ fn test_etx_nacks_update_to_inf_and_back() {
 #[test]
 fn test_etx_acks_update_to_1() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
-    let fr: FloodResponse = FloodResponse { flood_id: 0, path_trace: vec![(0, NodeType::Server), (1, NodeType::Drone), (2, NodeType::Drone), (3, NodeType::Client)] };
+    let fr: FloodResponse = FloodResponse {
+        flood_id: 0,
+        path_trace: vec![
+            (0, NodeType::Server),
+            (1, NodeType::Drone),
+            (2, NodeType::Drone),
+            (3, NodeType::Client),
+        ],
+    };
     server.update_network_from_flood(&fr);
     for i in 0..(DEFAULT_WINDOW_SZ * 15) {
-        server.sent_history.insert(i as u64, HistoryEntry { hops: vec![0, 1, 2], receiver_id: 2, frag_idx: 0, n_frags: 1, frag: [0; 128] });
+        server.sent_history.insert(
+            i as u64,
+            HistoryEntry {
+                hops: vec![0, 1, 2],
+                receiver_id: 2,
+                frag_idx: 0,
+                n_frags: 1,
+                frag: [0; 128],
+            },
+        );
     }
     let ack: Ack = Ack { fragment_index: 0 };
     let (ds, _) = crossbeam_channel::unbounded();
