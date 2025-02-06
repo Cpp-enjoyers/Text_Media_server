@@ -44,7 +44,7 @@ pub(crate) struct RoutingTable /* <const WINDOW_SIZE: u8> */ {
 }
 
 impl RoutingTable {
-    const EPSILON: f64 = 1e-6;
+    const EPSILON: f64 = 1e-3;
 
     #[inline]
     #[must_use]

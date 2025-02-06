@@ -116,7 +116,7 @@ pub struct GenericServer<T: ServerType> {
 
 fn default_estimator() -> PdrEstimator {
     PdrEstimator::new(DEFAULT_WINDOW_SZ, |old: f64, acks: u32, nacks: u32| {
-        DEFAULT_ALPHA * f64::from(acks) / f64::from(acks + nacks) + DEFAULT_BETA * old
+        DEFAULT_ALPHA * (f64::from(acks) / f64::from(acks + nacks)) + DEFAULT_BETA * old
     })
 }
 
