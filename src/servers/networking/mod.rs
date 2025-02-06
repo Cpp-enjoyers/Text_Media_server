@@ -9,7 +9,6 @@ use wg_2024::{
 use super::{GenericServer, ServerType};
 use crate::protocol_utils as network_protocol;
 
-pub(crate) mod routing;
 #[cfg(test)]
 mod test;
 
@@ -46,7 +45,7 @@ impl<T: ServerType> Flooder for GenericServer<T> {
 }
 
 impl<T: ServerType> GenericServer<T> {
-    pub(crate) fn handle_flood_response(
+    pub(super) fn handle_flood_response(
         &mut self,
         mut srch: SourceRoutingHeader,
         sid: u64,
@@ -80,7 +79,7 @@ impl<T: ServerType> GenericServer<T> {
         }
     }
 
-    pub(crate) fn flood(&mut self) {
+    pub(super) fn flood(&mut self) {
         let flood: Packet = Packet::new_flood_request(
             SourceRoutingHeader::empty_route(),
             0,
