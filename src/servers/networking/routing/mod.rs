@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
-use log::{error, info};
+use log::{error, info, warn};
 use petgraph::{algo::astar, visit::EdgeRef};
 use wg_2024::{
     network::{NodeId, SourceRoutingHeader},
@@ -151,6 +151,29 @@ impl<T: ServerType> GenericServer<T> {
     #[inline]
     pub(super) fn check_and_add_edge(&mut self, from: u8, to: u8) -> bool {
         self.network_graph.check_and_add_edge(from, to)
+    }
+
+    pub(crate) fn update_pdr_from_ack(&mut self, hops: &[u8]) {
+        if hops.len() < 3 {
+            warn!(target: &self.target_topic, "warning, received valid ack with invalid routing header, skipping pdr update...");
+            return;
+        }
+
+        for &id in &hops[1..hops.len() - 1] {
+            self.network_graph.update_pdr(id, true);
+        }
+    }
+
+    pub(crate) fn update_pdr_from_nack(&mut self, hops: &[u8]) {
+        if hops.len() < 2 {
+            warn!(target: &self.target_topic, "warning, received valid nack with invalid routing header, skipping pdr update...");
+            return;
+        }
+
+        self.network_graph.update_pdr(hops[0], false);
+        for &id in &hops[1..hops.len() - 1] {
+            self.network_graph.update_pdr(id, true);
+        }
     }
 
     pub(crate) fn update_network_from_flood(&mut self, fr: &FloodResponse) {

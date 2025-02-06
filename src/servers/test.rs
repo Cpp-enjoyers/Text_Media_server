@@ -37,9 +37,4 @@ mod command_tests {
         assert!(!server.network_graph.get_graph().contains_node(1));
         assert!(server.need_flood);
     }
-
-    #[test]
-    fn test_graph_consistency() {
-        todo!();
-    }
 }

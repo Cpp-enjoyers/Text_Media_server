@@ -389,9 +389,9 @@ fn test_flood_server_isolated() {
     server.controller_recv = ctrlr.clone();
     let nack: Nack = Nack {
         fragment_index: 0,
-        nack_type: NackType::Dropped,
+        nack_type: NackType::UnexpectedRecipient(34),
     };
-    server.handle_nack(0, &nack);
+    server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
     assert!(server.need_flood);
     server.flood();
     assert!(!server.need_flood);

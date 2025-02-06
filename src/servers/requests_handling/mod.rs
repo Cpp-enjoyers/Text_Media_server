@@ -152,6 +152,7 @@ impl<T: ST> GenericServer<T> {
                         self.pending_packets.push_back(sid);
                     },
                     |c| {
+                        self.sent_history.entry(sid).and_modify(|e: &mut HistoryEntry| e.hops.clone_from(&packet.routing_header.hops));
                         let _ = c.send(packet.clone());
                         let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
                     },

@@ -1,7 +1,11 @@
+use std::collections::HashMap;
+
+use common::{slc_commands::ServerCommand, Server};
+use crossbeam_channel::Sender;
 use petgraph::Graph;
 use wg_2024::{
-    network::SourceRoutingHeader,
-    packet::{FloodResponse, NodeType},
+    network::{NodeId, SourceRoutingHeader},
+    packet::{FloodResponse, NodeType, Packet},
 };
 
 use crate::servers::{
@@ -141,4 +145,47 @@ fn test_get_srch_from_srch() {
         server.get_routing_hdr_with_hint(&hdr, 1).hops,
         vec![0u8, 5u8, 4u8, 3u8, 1u8]
     );
+}
+
+#[test]
+fn test_graph_consistency() {
+    let (ctrls, _) = crossbeam_channel::unbounded();
+    let (_, ctrlr) = crossbeam_channel::unbounded();
+    let (_, st) = crossbeam_channel::unbounded();
+    let mut map: HashMap<NodeId, Sender<Packet>> = HashMap::new();
+    let (ds, _) = crossbeam_channel::unbounded();
+    map.insert(1, ds.clone());
+    let mut server: GenericServer<Text> = <GenericServer<Text>>::new(0, ctrls, ctrlr, st, map);
+    let (ds, _) = crossbeam_channel::unbounded();
+    let cmd: ServerCommand = ServerCommand::AddSender(2, ds.clone());
+    server.handle_command(cmd);
+    let srch: SourceRoutingHeader = SourceRoutingHeader::new(vec![5, 4, 3, 0], 3);
+    server.update_network_from_header(&srch);
+    let fr: FloodResponse = FloodResponse {
+        flood_id: 0,
+        path_trace: vec![
+            (0, NodeType::Server),
+            (6, NodeType::Drone),
+            (7, NodeType::Client),
+            (8, NodeType::Drone),
+            (9, NodeType::Drone),
+        ],
+    };
+    server.update_network_from_flood(&fr);
+    assert!(graphmap_eq(
+        server.network_graph.get_graph(),
+        &NetworkGraph::from_edges([
+            (0, 1, INITIAL_ETX),
+            (0, 2, INITIAL_ETX),
+            (4, 3, INITIAL_ETX),
+            (3, 4, INITIAL_ETX),
+            (0, 3, INITIAL_ETX),
+            (4, 5, INITIAL_ETX),
+            (0, 6, INITIAL_ETX),
+            (6, 7, INITIAL_ETX),
+            (8, 7, INITIAL_ETX),
+            (8, 9, INITIAL_ETX),
+            (9, 8, INITIAL_ETX),
+        ])
+    ));
 }

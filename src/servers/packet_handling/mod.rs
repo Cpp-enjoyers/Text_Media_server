@@ -17,18 +17,20 @@ where
     GenericServer<T>: RequestHandler,
 {
     pub(crate) fn handle_ack(&mut self, sid: u64, _ack: &Ack) {
-        self.sent_history.remove(&sid).map_or_else(
-            || warn!(target: &self.target_topic, "Received unknow sid in Ack msg: {sid}"),
-            |_| info!(target: &self.target_topic, "Sid: {sid} acknoledged"),
-        );
+        if let Some(entry) = self.sent_history.remove(&sid) {
+            self.update_pdr_from_ack(&entry.hops);
+            info!(target: &self.target_topic, "Sid: {sid} acknoledged");
+        } else {
+            warn!(target: &self.target_topic, "Received unknow sid in Ack msg: {sid}");
+        }
     }
 
-    pub(crate) fn handle_nack(&mut self, sid: u64, nack: &Nack) {
+    pub(crate) fn handle_nack(&mut self, sid: u64, srch: &SourceRoutingHeader, nack: &Nack) {
         info!("Handling received nack: {nack}");
         match nack.nack_type {
             NackType::Dropped => {
-                // TODO
-                info!(target: "TODO", "ETX?");
+                self.update_pdr_from_nack(&srch.hops);
+                info!(target: &self.target_topic, "Received dropped nack, updating pdr");
             }
             NackType::ErrorInRouting(id) => {
                 self.network_graph.remove_node(id);

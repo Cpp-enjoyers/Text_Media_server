@@ -1,6 +1,7 @@
 /*
  * TODOS: ETX with packet count + exponentially moving average
  *        Multithreading (prob there's no time >.<)
+ *        Test SimController behaviour
  */
 
 use std::{
@@ -137,7 +138,7 @@ where
             }
             PacketType::Nack(nack) => {
                 info!(target: &self.target_topic, "Received nack {nack}");
-                self.handle_nack(sid, &nack);
+                self.handle_nack(sid, &srch, &nack);
             }
             PacketType::FloodRequest(mut fr) => {
                 info!(target: &self.target_topic, "Received flood request {fr}");

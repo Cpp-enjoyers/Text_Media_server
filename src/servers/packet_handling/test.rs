@@ -46,7 +46,7 @@ mod packet_tests {
             fragment_index: 0,
             nack_type: NackType::Dropped,
         };
-        server.handle_nack(0, &nack);
+        server.handle_nack(0, &SourceRoutingHeader::new(vec![1, 0], 0), &nack);
         assert_eq!(server.pending_packets.pop_back().unwrap(), 0);
     }
 
@@ -66,7 +66,7 @@ mod packet_tests {
         );
         let (ds, dr) = crossbeam_channel::unbounded();
         server.packet_send.insert(1, ds.clone());
-        server.handle_nack(0, &nack);
+        server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
         if let Ok(packet) = dr.recv() {
             match packet.pack_type {
                 PacketType::MsgFragment(f) => {
@@ -97,9 +97,9 @@ mod packet_tests {
         );
         let (ds, dr) = crossbeam_channel::unbounded();
         server.packet_send.insert(1, ds.clone());
-        server.handle_nack(0, &nack);
-        server.handle_nack(0, &nack);
-        server.handle_nack(0, &nack);
+        server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
+        server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
+        server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
         for _ in 0..3 {
             if let Ok(packet) = dr.recv() {
                 match packet.pack_type {
@@ -131,7 +131,7 @@ mod packet_tests {
             NetworkGraph::from_edges([(0, 1, INITIAL_PDR), (1, 2, INITIAL_PDR)]),
             servers::default_estimator(),
         );
-        server.handle_nack(0, &nack);
+        server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
         assert_eq!(server.pending_packets.pop_back().unwrap(), 0);
         assert!(!server.network_graph.get_graph().contains_node(1));
     }
