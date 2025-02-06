@@ -283,3 +283,62 @@ fn test_etx_acks_update_to_1() {
     }
     assert!((*server.network_graph.get_graph().edge_weight(1, 2).unwrap() - 1.).abs() < 1e-3);
 }
+
+#[test]
+fn test_route_after_etx_update() {
+    let mut server: GenericServer<Text> = get_dummy_server_text();
+    let fr: FloodResponse = FloodResponse {
+        flood_id: 0,
+        path_trace: vec![
+            (0, NodeType::Server),
+            (1, NodeType::Drone),
+            (3, NodeType::Client),
+        ],
+    };
+    server.update_network_from_flood(&fr);
+    let fr: FloodResponse = FloodResponse {
+        flood_id: 0,
+        path_trace: vec![
+            (0, NodeType::Server),
+            (2, NodeType::Drone),
+            (4, NodeType::Drone),
+            (3, NodeType::Client),
+        ],
+    };
+    server.update_network_from_flood(&fr);
+    server.sent_history.insert(
+        0,
+        HistoryEntry {
+            hops: vec![0, 2],
+            receiver_id: 2,
+            frag_idx: 0,
+            n_frags: 1,
+            frag: [0; 128],
+        },
+    );
+    let nack: Nack = Nack {
+        fragment_index: 0,
+        nack_type: NackType::Dropped,
+    };
+    let (ds, _) = crossbeam_channel::unbounded();
+    let cmd: ServerCommand = ServerCommand::AddSender(1, ds.clone());
+    server.handle_command(cmd);
+    let cmd: ServerCommand = ServerCommand::AddSender(2, ds.clone());
+    server.handle_command(cmd);
+    server.sent_history.insert(
+        0,
+        HistoryEntry {
+            hops: vec![0, 1, 3],
+            receiver_id: 3,
+            frag_idx: 0,
+            n_frags: 1,
+            frag: [0; 128],
+        },
+    );
+    for _ in 0..DEFAULT_WINDOW_SZ * 2 {
+        assert!(server.sent_history.get(&0).unwrap().hops == vec![0, 1, 3]);
+        server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
+    }
+    server.handle_nack(0, &SourceRoutingHeader::initialize(vec![1, 0]), &nack);
+    assert!(server.sent_history.get(&0).unwrap().hops == vec![0, 2, 4, 3]);
+}

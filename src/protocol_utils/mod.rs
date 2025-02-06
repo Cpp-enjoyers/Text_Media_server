@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod test;
 
-pub(crate) const SID_MASK: u64 = 0xFFFF_FFFF_FFFF;
-pub(crate) const RID_MASK: u64 = 0xFFFF;
+pub(crate) const SID_MASK: u64 = 0x0000_FFFF_FFFF_FFFF;
+pub(crate) const RID_MASK: u64 = 0x0000_0000_0000_FFFF;
 
 #[inline]
 pub(crate) fn generate_response_id(sid: u64, rid: u16) -> u64 {
