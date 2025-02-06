@@ -1,3 +1,17 @@
+/*!
+ * # `CppEnjoyers` implementation of `TextServer` and `MediaServer`
+ *
+ * Supports compression of packets (if requested by client).
+ * Available compressions are:
+ * - Huffman
+ * - LZW
+ *
+ * Implements ETX (expected transmission rate) estimation of
+ * drones in the network using an exponentially weighted moving
+ * average: ETX(n) = a * p(n) + b * ETX(n - 1)
+ */
+// TODO ticks?
+
 #![allow(dead_code)]
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]

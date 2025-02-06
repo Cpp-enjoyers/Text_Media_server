@@ -53,7 +53,7 @@ impl<T: ST> GenericServer<T> {
         }
     }
 
-    pub(crate) fn send_response(
+    pub(super) fn send_response(
         &mut self,
         srch: &SourceRoutingHeader,
         src_id: NodeId,
@@ -129,7 +129,7 @@ impl<T: ST> GenericServer<T> {
         }
     }
 
-    pub(crate) fn resend_packet(
+    pub(super) fn resend_packet(
         &mut self,
         sid: u64,
         src_id: NodeId,

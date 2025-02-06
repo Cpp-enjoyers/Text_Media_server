@@ -18,8 +18,8 @@ mod request_tests {
     use crate::{
         servers::{
             self,
-            networking::routing::RoutingTable,
             requests_handling::list_dir,
+            routing::RoutingTable,
             serialization::fragment_response,
             test_utils::{get_dummy_server_media, get_dummy_server_text},
             HistoryEntry, NetworkGraph, RequestHandler, ServerType as ST, INITIAL_PDR, MEDIA_PATH,

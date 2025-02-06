@@ -16,7 +16,7 @@ impl<T: ServerType> GenericServer<T>
 where
     GenericServer<T>: RequestHandler,
 {
-    pub(crate) fn handle_ack(&mut self, sid: u64, _ack: &Ack) {
+    pub(super) fn handle_ack(&mut self, sid: u64, _ack: &Ack) {
         if let Some(entry) = self.sent_history.remove(&sid) {
             self.update_pdr_from_ack(&entry.hops);
             info!(target: &self.target_topic, "Sid: {sid} acknoledged");
@@ -25,7 +25,7 @@ where
         }
     }
 
-    pub(crate) fn handle_nack(&mut self, sid: u64, srch: &SourceRoutingHeader, nack: &Nack) {
+    pub(super) fn handle_nack(&mut self, sid: u64, srch: &SourceRoutingHeader, nack: &Nack) {
         info!("Handling received nack: {nack}");
         match nack.nack_type {
             NackType::Dropped => {
@@ -61,7 +61,7 @@ where
     }
 
     #[allow(clippy::cast_possible_truncation)]
-    pub(crate) fn handle_fragment(
+    pub(super) fn handle_fragment(
         &mut self,
         srch: &SourceRoutingHeader,
         sid: u64,
@@ -94,7 +94,7 @@ where
         }
     }
 
-    pub(crate) fn send_ack(
+    pub(super) fn send_ack(
         &mut self,
         srch: &SourceRoutingHeader,
         src_id: NodeId,

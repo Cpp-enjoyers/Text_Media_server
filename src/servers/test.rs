@@ -4,8 +4,8 @@ mod command_tests {
 
     use crate::{
         servers::{
-            self, networking::routing::RoutingTable, test_utils::get_dummy_server_text,
-            NetworkGraph, Text, INITIAL_PDR,
+            self, routing::RoutingTable, test_utils::get_dummy_server_text, NetworkGraph, Text,
+            INITIAL_PDR,
         },
         GenericServer,
     };

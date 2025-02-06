@@ -17,8 +17,8 @@ use common::{
 };
 use crossbeam_channel::{select_biased, Receiver, Sender};
 use log::{info, warn};
-use networking::routing::{PdrEstimator, RoutingTable};
 use petgraph::prelude::DiGraphMap;
+use routing::{PdrEstimator, RoutingTable};
 use wg_2024::{
     network::{NodeId, SourceRoutingHeader},
     packet::{Packet, PacketType, FRAGMENT_DSIZE},
@@ -27,6 +27,7 @@ use wg_2024::{
 mod networking;
 mod packet_handling;
 mod requests_handling;
+mod routing;
 mod serialization;
 #[cfg(test)]
 mod test;
@@ -159,7 +160,7 @@ where
         match command {
             ServerCommand::AddSender(node_id, channel) => {
                 self.packet_send.insert(node_id, channel);
-                self.network_graph.check_and_add_edge(self.id, node_id);
+                self.check_and_add_edge(self.id, node_id);
                 // self.network_graph.check_and_add_edge(node_id, self.id);
                 self.need_flood = true;
                 info!(target: &self.target_topic, "Received add sender command, sender id: {node_id}");
@@ -195,7 +196,6 @@ where
         let mut network_graph: RoutingTable = RoutingTable::new(default_estimator());
         for did in packet_send.keys() {
             network_graph.check_and_add_edge(id, *did);
-            // network_graph.add_edge(*did, id, INITIAL_PDR);
         }
 
         GenericServer {
