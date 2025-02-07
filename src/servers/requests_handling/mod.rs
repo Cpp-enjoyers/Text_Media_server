@@ -70,9 +70,9 @@ impl<T: ST> GenericServer<T> {
         resp_hdr.increase_hop_index();
         let serialized: Result<Vec<[u8; FRAGMENT_DSIZE]>, String>;
         if let Ok(data) = resp.serialize() {
-            info!(target: &self.target_topic, "Serialized response: {data:?}");
+            info!(target: &self.target_topic, "Serialized response");
             serialized = Self::compress(data, &resp.compression_type).map(fragment_response);
-            info!(target: &self.target_topic, "Compressed data: {serialized:?}");
+            info!(target: &self.target_topic, "Compressed data");
         } else {
             error!(target: &self.target_topic, "Cannot serialize response {resp:?}, dropping response");
             return;
@@ -207,7 +207,7 @@ impl RequestHandler for GenericServer<Text> {
                     );
                 }
             }
-            info!(target: &self.target_topic, "Sending response: {resp:?}");
+            info!(target: &self.target_topic, "Sending response");
             self.send_response(srch, src_id, rid, &resp);
         } else {
             error!(target: &self.target_topic, "Received undeserializable request, dropping request...");
@@ -258,7 +258,7 @@ impl RequestHandler for GenericServer<Media> {
                     );
                 }
             }
-            info!(target: &self.target_topic, "Sending response: {resp:?}");
+            info!(target: &self.target_topic, "Sending response");
             self.send_response(srch, src_id, rid, &resp);
         } else {
             error!(target: &self.target_topic, "Received undeserializable request, dropping request...");

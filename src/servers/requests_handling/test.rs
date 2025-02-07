@@ -82,8 +82,17 @@ mod request_tests {
 
     #[test]
     fn list_dir_test() {
-        let l: Vec<String> = list_dir(TEXT_PATH).unwrap_or_default();
-        assert!(l == vec![TEXT_PATH.to_string() + "file.html"]);
+        let mut l: Vec<String> = list_dir(TEXT_PATH).unwrap_or_default();
+        assert!(
+            l.sort()
+                == vec![
+                    TEXT_PATH.to_string() + "file.html",
+                    TEXT_PATH.to_string() + "file2.html",
+                    TEXT_PATH.to_string() + "index.html",
+                    TEXT_PATH.to_string() + "three.html",
+                ]
+                .sort()
+        );
     }
 
     #[test]

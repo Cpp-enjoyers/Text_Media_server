@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images Horizontally Aligned</title>
+    <style>
+        .image-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .image-container img {
+            width: 200px; /* Adjust the size of the images */
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="image-container">
+        <img src="./media/rust.png" alt="Rust image">
+        <img src="./media/c++.png" alt="C++ image">
+        <img src="./media/haskell.jpg" alt="Haskell image">
+    </div>
+</body>
+</html>

@@ -85,6 +85,10 @@ impl<T: ServerType> GenericServer<T> {
             0,
             FloodRequest::initialize(self.session_id, self.id, NodeType::Server),
         );
+        self.flood_history
+            .entry(self.id)
+            .or_insert(RingBuffer::with_capacity(64))
+            .insert(self.session_id);
         self.session_id = network_protocol::next_sid(self.session_id);
         for (id, c) in &self.packet_send {
             info!(target: &self.target_topic, "Sending flood request to {id}");

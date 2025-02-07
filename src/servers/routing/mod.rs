@@ -185,7 +185,11 @@ impl<T: ServerType> GenericServer<T> {
                     self.check_and_add_edge(*next_id, *prev_id);
                 }
                 (NodeType::Drone, _) => {
-                    self.check_and_add_edge(*prev_id, *next_id);
+                    if *next_id == self.id {
+                        self.check_and_add_edge(*next_id, *prev_id);
+                    } else {
+                        self.check_and_add_edge(*prev_id, *next_id);
+                    }
                 }
                 (_, NodeType::Drone) => {
                     if *prev_id == self.id {
