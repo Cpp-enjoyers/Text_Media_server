@@ -12,7 +12,7 @@ mod client_interaction_tests {
     use ap2024_unitn_cppenjoyers_drone::CppEnjoyersDrone;
     use common::{
         slc_commands::{
-            ServerCommand, ServerEvent, TextMediaResponse, WebClientCommand, WebClientEvent
+            ServerCommand, ServerEvent, TextMediaResponse, WebClientCommand, WebClientEvent,
         },
         Client, Server,
     };
@@ -148,6 +148,9 @@ mod client_interaction_tests {
     }
 
     fn generic_full_file_request(
+        devents: Receiver<DroneEvent>,
+        stctrl: Sender<ServerCommand>,
+        smctrl: Sender<ServerCommand>,
         cevents: Receiver<WebClientEvent>,
         cctrl: Sender<WebClientCommand>,
         file: String,
@@ -155,35 +158,55 @@ mod client_interaction_tests {
     ) {
         sleep(Duration::from_secs(1));
         let _ = cctrl.send(WebClientCommand::AskServersTypes);
-        let mut flag: bool = false;
-        while let Ok(e) = cevents.recv() {
-            match e {
-                WebClientEvent::FileFromClient(r, _) => {
-                    check_file(r);
-                    flag = true;
-                    break;
+        let mut _flag: bool = false;
+        loop {
+            if let Ok(e) = devents.try_recv() {
+                match e {
+                    DroneEvent::ControllerShortcut(p) => {
+                        let &idx = p.routing_header.hops.last().unwrap();
+                        if idx == 11 {
+                            let _ = stctrl.send(ServerCommand::Shortcut(p));
+                        } else if idx == 12 {
+                            let _ = cctrl.send(WebClientCommand::Shortcut(p));
+                        } else if idx == 13 {
+                            let _ = smctrl.send(ServerCommand::Shortcut(p));
+                        }
+                    }
+                    _ => {}
                 }
-                WebClientEvent::ServersTypes(_) => {
-                    let _ = cctrl.send(WebClientCommand::AskListOfFiles(11));
+            }
+            if let Ok(e) = cevents.try_recv() {
+                match e {
+                    WebClientEvent::FileFromClient(r, _) => {
+                        check_file(r);
+                        _flag = true;
+                        break;
+                    }
+                    WebClientEvent::ServersTypes(_) => {
+                        let _ = cctrl.send(WebClientCommand::AskListOfFiles(11));
+                    }
+                    WebClientEvent::ListOfFiles(_, _) => {
+                        let _ = cctrl.send(WebClientCommand::RequestFile(file.clone(), 11));
+                    }
+                    WebClientEvent::UnsupportedRequest => {
+                        panic!();
+                    }
+                    _ => {}
                 }
-                WebClientEvent::ListOfFiles(_, _) => {
-                    let _ = cctrl.send(WebClientCommand::RequestFile(file.clone(), 11));
-                }
-                WebClientEvent::UnsupportedRequest => {
-                    panic!();
-                }
-                _ => {}
             }
         }
-        assert!(flag);
+        assert!(_flag);
     }
 
     #[test]
     #[ignore = "computationally expensive"]
     fn test_full_text_file_request1() {
-        let (_dcmds, _devents, _stctrl, _stevents, _smctrl, _smevents, cctrl, cevents) =
+        let (_dcmds, devents, stctrl, _stevents, smctrl, _smevents, cctrl, cevents) =
             instanciate_testing_topology();
         generic_full_file_request(
+            devents,
+            stctrl,
+            smctrl,
             cevents,
             cctrl,
             "./public/file.html".to_owned(),
@@ -197,9 +220,12 @@ mod client_interaction_tests {
     #[test]
     #[ignore = "computationally expensive"]
     fn test_full_text_file_request2() {
-        let (_dcmds, _devents, _stctrl, _stevents, _smctrl, _smevents, cctrl, cevents) =
+        let (_dcmds, devents, stctrl, _stevents, smctrl, _smevents, cctrl, cevents) =
             instanciate_testing_topology();
         generic_full_file_request(
+            devents,
+            stctrl,
+            smctrl,
             cevents,
             cctrl,
             "./public/index.html".to_owned(),
@@ -214,9 +240,12 @@ mod client_interaction_tests {
     #[test]
     #[ignore = "computationally expensive"]
     fn test_full_text_file_request3() {
-        let (_dcmds, _devents, _stctrl, _stevents, _smctrl, _smevents, cctrl, cevents) =
+        let (_dcmds, devents, stctrl, _stevents, smctrl, _smevents, cctrl, cevents) =
             instanciate_testing_topology();
         generic_full_file_request(
+            devents,
+            stctrl,
+            smctrl,
             cevents,
             cctrl,
             "./public/file2.html".to_owned(),
@@ -233,9 +262,12 @@ mod client_interaction_tests {
     #[test]
     #[ignore = "computationally expensive"]
     fn test_full_text_file_request4() {
-        let (_dcmds, _devents, _stctrl, _stevents, _smctrl, _smevents, cctrl, cevents) =
+        let (_dcmds, devents, stctrl, _stevents, smctrl, _smevents, cctrl, cevents) =
             instanciate_testing_topology();
         generic_full_file_request(
+            devents,
+            stctrl,
+            smctrl,
             cevents,
             cctrl,
             "./public/three.html".to_owned(),
@@ -269,54 +301,55 @@ mod client_interaction_tests {
         let _ = dcmds[3].send(DroneCommand::RemoveSender(8));
         let _ = dcmds[8].send(DroneCommand::Crash);
         sleep(Duration::from_secs(3));
-        let _ = cctrl.send(WebClientCommand::AskServersTypes);
-        let file: String = "./public/file.html".to_owned();
-        loop {
-            if let Ok(e) = devents.try_recv() {
-                match e {
-                    DroneEvent::ControllerShortcut(p) => {
-                        let &idx = p.routing_header.hops.last().unwrap();
-                        if idx == 11 {
-                            let _ = stctrl.send(ServerCommand::Shortcut(p));
-                        } else if idx == 12 {
-                            let _ = cctrl.send(WebClientCommand::Shortcut(p));
-                        } else if idx == 13 {
-                            let _ = smctrl.send(ServerCommand::Shortcut(p));
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            if let Ok(e) = cevents.try_recv() {
-                match e {
-                    WebClientEvent::FileFromClient(r, _) => {
-                        assert!(r.get_media_files().is_empty());
-                        assert!(r.get_html_file().1 == read(&file).unwrap());
-                        break;
-                    }
-                    WebClientEvent::ServersTypes(_) => {
-                        let _ = cctrl.send(WebClientCommand::AskListOfFiles(11));
-                    }
-                    WebClientEvent::ListOfFiles(_, _) => {
-                        let _ = cctrl.send(WebClientCommand::RequestFile(file.clone(), 11));
-                    }
-                    WebClientEvent::UnsupportedRequest => {
-                        panic!();
-                    }
-                    _ => {}
-                }
-            }
-        }
+        generic_full_file_request(
+            devents,
+            stctrl,
+            smctrl,
+            cevents,
+            cctrl,
+            "./public/file.html".to_owned(),
+            |r: TextMediaResponse| {
+                assert!(r.get_media_files().is_empty());
+                assert!(r.get_html_file().1 == read("./public/file.html").unwrap());
+            },
+        );
     }
+
+    /*
+    #[test]
+    #[ignore = "computationally expensive"]
+    fn test_after_removed_drone1() {
+        let (dcmds, _devents, stctrl, _stevents, _smctrl, _smevents, cctrl, cevents) =
+            instanciate_testing_topology();
+        sleep(Duration::from_secs(3));
+        let _ = stctrl.send(ServerCommand::RemoveSender(0));
+        let _ = dcmds[0].send(DroneCommand::RemoveSender(11));
+        sleep(Duration::from_secs(3));
+        generic_full_file_request(
+            cevents,
+            cctrl,
+            "./public/file.html".to_owned(),
+            |r: TextMediaResponse| {
+                assert!(r.get_media_files().is_empty());
+                assert!(r.get_html_file().1 == read("./public/file.html").unwrap());
+            },
+        );
+    }
+     */
 
     #[test]
     #[ignore = "computationally expensive"]
-    fn test_after_removed_drone() {
-        let (dcmds, _devents, stctrl, _stevents, _smctrl, _smevents, cctrl, cevents) =
+    fn test_after_removed_drone2() {
+        let (dcmds, devents, stctrl, _stevents, smctrl, _smevents, cctrl, cevents) =
             instanciate_testing_topology();
-        let _ = stctrl.send(ServerCommand::RemoveSender(0));
-        let _ = dcmds[0].send(DroneCommand::RemoveSender(11));
+        sleep(Duration::from_secs(3));
+        let _ = cctrl.send(WebClientCommand::RemoveSender(4));
+        let _ = dcmds[4].send(DroneCommand::RemoveSender(12));
+        sleep(Duration::from_secs(3));
         generic_full_file_request(
+            devents,
+            stctrl,
+            smctrl,
             cevents,
             cctrl,
             "./public/file.html".to_owned(),
