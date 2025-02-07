@@ -19,3 +19,4 @@ ap2024_unitn_cppenjoyers_drone = { git = "https://github.com/Cpp-enjoyers/drone.
 env_logger = "0.11.6"
 web_client = { git = "https://github.com/Cpp-enjoyers/web_client.git" }
 ap2024_unitn_cppenjoyers_drone = { git = "https://github.com/Cpp-enjoyers/drone.git" }
+rand = "0.5"
