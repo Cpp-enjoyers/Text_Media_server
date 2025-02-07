@@ -26,7 +26,7 @@ where
     }
 
     pub(super) fn handle_nack(&mut self, sid: u64, srch: &SourceRoutingHeader, nack: &Nack) {
-        info!("Handling received nack: {nack}");
+        info!(target: &self.target_topic, "Handling received nack: {nack}");
         match nack.nack_type {
             NackType::Dropped => {
                 self.update_pdr_from_nack(&srch.hops);

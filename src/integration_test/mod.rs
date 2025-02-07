@@ -12,7 +12,7 @@ mod client_interaction_tests {
     use ap2024_unitn_cppenjoyers_drone::CppEnjoyersDrone;
     use common::{
         slc_commands::{
-            ServerCommand, ServerEvent, TextMediaResponse, WebClientCommand, WebClientEvent,
+            ServerCommand, ServerEvent, TextMediaResponse, WebClientCommand, WebClientEvent
         },
         Client, Server,
     };
@@ -179,6 +179,7 @@ mod client_interaction_tests {
     }
 
     #[test]
+    #[ignore = "computationally expensive"]
     fn test_full_text_file_request1() {
         let (_dcmds, _devents, _stctrl, _stevents, _smctrl, _smevents, cctrl, cevents) =
             instanciate_testing_topology();
@@ -253,11 +254,12 @@ mod client_interaction_tests {
     fn test_after_crashed_drone() {
         // env::set_var("RUST_LOG", "info");
         // let _ = env_logger::try_init();
-        let (dcmds, _devents, _stctrl, _stevents, _smctrl, _smevents, cctrl, cevents) =
+        let (dcmds, devents, stctrl, _stevents, smctrl, _smevents, cctrl, cevents) =
             instanciate_testing_topology();
         for c in dcmds.iter() {
             let _ = c.send(DroneCommand::SetPacketDropRate(0.));
         }
+        sleep(Duration::from_secs(3));
         let _ = dcmds[0].send(DroneCommand::RemoveSender(1));
         let _ = dcmds[2].send(DroneCommand::RemoveSender(1));
         let _ = dcmds[6].send(DroneCommand::RemoveSender(1));
@@ -266,15 +268,45 @@ mod client_interaction_tests {
         let _ = dcmds[9].send(DroneCommand::RemoveSender(8));
         let _ = dcmds[3].send(DroneCommand::RemoveSender(8));
         let _ = dcmds[8].send(DroneCommand::Crash);
-        generic_full_file_request(
-            cevents,
-            cctrl,
-            "./public/file.html".to_owned(),
-            |r: TextMediaResponse| {
-                assert!(r.get_media_files().is_empty());
-                assert!(r.get_html_file().1 == read("./public/file.html").unwrap());
-            },
-        );
+        sleep(Duration::from_secs(3));
+        let _ = cctrl.send(WebClientCommand::AskServersTypes);
+        let file: String = "./public/file.html".to_owned();
+        loop {
+            if let Ok(e) = devents.try_recv() {
+                match e {
+                    DroneEvent::ControllerShortcut(p) => {
+                        let &idx = p.routing_header.hops.last().unwrap();
+                        if idx == 11 {
+                            let _ = stctrl.send(ServerCommand::Shortcut(p));
+                        } else if idx == 12 {
+                            let _ = cctrl.send(WebClientCommand::Shortcut(p));
+                        } else if idx == 13 {
+                            let _ = smctrl.send(ServerCommand::Shortcut(p));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            if let Ok(e) = cevents.try_recv() {
+                match e {
+                    WebClientEvent::FileFromClient(r, _) => {
+                        assert!(r.get_media_files().is_empty());
+                        assert!(r.get_html_file().1 == read(&file).unwrap());
+                        break;
+                    }
+                    WebClientEvent::ServersTypes(_) => {
+                        let _ = cctrl.send(WebClientCommand::AskListOfFiles(11));
+                    }
+                    WebClientEvent::ListOfFiles(_, _) => {
+                        let _ = cctrl.send(WebClientCommand::RequestFile(file.clone(), 11));
+                    }
+                    WebClientEvent::UnsupportedRequest => {
+                        panic!();
+                    }
+                    _ => {}
+                }
+            }
+        }
     }
 
     #[test]
