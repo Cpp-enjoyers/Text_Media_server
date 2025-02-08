@@ -1,9 +1,13 @@
-# `CppEnjoyers` implementation of `TextServer` and `MediaServer`
+ # `CppEnjoyers` implementation of `TextServer` and `MediaServer`
 
  Supports compression of packets (if requested by client).
  Available compressions are:
  - Huffman
  - LZW
+ 
+ Uses the log crate to trace network operations and debug, to abilitate
+ the logs, simply set the environment variable `RUST_LOG` to the desired 
+ level (`info`, `warn`, `error`).
 
  The `GenericServer` uses ETX estimation to decide the best routing paths.
 
@@ -18,6 +22,16 @@
  - p(n) is the estimated ETX at time n, calculated from the last k samples (k is a predefined constant)
  - alpha and beta are parameters that decide how fast the ETX adapts to change
 
+ # Simulation controller interaction
+ The `GenericServer` can accept different command by the scl:
+ - `AddSender(ID, Channel)`: adds a new direct neighbor to the server
+ - `RemoveSender(ID)`: removes a direct neighbor from the server
+ - `Shortcut(Packet)`: delivers to the server a packet that has been shortcutted
+ 
+ The `GenericServer` can send different events to the scl:
+ - `PacketSent(Packet)`: logs that a packet has been sent over the network
+ - `Shortcut(Packet)`: sends a packet that generated an error but cannot be dropped
+ 
  # High level protocol
 
  The protocol between Client and Server is defined as follows:
