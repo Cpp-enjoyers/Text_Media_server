@@ -21,6 +21,7 @@ mod networking_tests {
 
     use crate::servers::test_utils::get_dummy_server_text;
 
+    /// tests correct behaviour of the flood buffer
     #[test]
     fn test_flood_buffer() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -34,6 +35,7 @@ mod networking_tests {
         assert!(server.flood_history.get(&0).unwrap().contains(&1));
     }
 
+    /// tests correct use of the controller shortcuts
     #[test]
     fn test_send_to_controller() {
         let (ctrl_send, ctrl_recv_ev) = crossbeam_channel::unbounded();
@@ -47,6 +49,7 @@ mod networking_tests {
         assert!(ctrl_recv_ev.recv_timeout(Duration::from_secs(1)).is_err());
     }
 
+    /// tests correct handling of [FloodResponse]s initiated by the server
     #[test]
     fn test_handle_my_flood_response() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -65,6 +68,7 @@ mod networking_tests {
         ));
     }
 
+    /// tests correct handling of [FloodResponse]s not initiated by the server
     #[test]
     fn test_handle_flood_response() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -86,6 +90,7 @@ mod networking_tests {
         assert!(packet.routing_header.hop_index == 2);
     }
 
+    /// tests correct [FloodResponse]s shortcutting in the event of ill formed traces
     #[test]
     fn test_handle_flood_response_to_scl() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -110,6 +115,13 @@ mod networking_tests {
         }
     }
 
+    /// test flood network construction in a small topology
+    /// 1 
+    ///  \
+    ///   11--12
+    ///  /  \ 
+    /// 14--13
+    /// 1: Server, [11, 12, 13, 14]: Drones
     #[test]
     fn test_flood_small_topology() {
         // Server channels
@@ -229,6 +241,13 @@ mod networking_tests {
         ));
     }
 
+    /// test flood network construction in a big topology
+    /// 1--12
+    /// \  /
+    ///  11--13
+    ///   \ /  \
+    ///    14-- 2
+    /// [1, 2]: Server, [11, 12, 13, 14]: Drones
     #[test]
     fn test_flood_big_topology() {
         // env::set_var("RUST_LOG", "info");
@@ -379,6 +398,7 @@ mod networking_tests {
         ));
     }
 
+    /// tests correct flooding behaviour in the event of disconnected graph due to [NackType::ErrorInRouting]
     #[test]
     fn test_flood_server_isolated() {
         let mut server: GenericServer<Text> = get_dummy_server_text();

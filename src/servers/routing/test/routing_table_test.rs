@@ -5,10 +5,12 @@ use crate::servers::{
     NetworkGraph, INITIAL_ETX, INITIAL_PDR,
 };
 
+/// get a very simple network topology
 fn get_dummy_graph() -> NetworkGraph {
     NetworkGraph::from_edges([(1, 2, 1.), (1, 3, 1.), (2, 3, 1.), (3, 1, 1.)])
 }
 
+/// tests graph consistency after instanciation
 #[test]
 fn test_new_with_graph() {
     let graph: NetworkGraph = get_dummy_graph();
@@ -30,6 +32,7 @@ fn test_new_with_graph() {
     }
 }
 
+/// tests the correct behaviour and consistency of new edges with the pdr_table
 #[test]
 fn test_add_edge() {
     let estimator: PdrEstimator = PdrEstimator::new(2, |_, _, _| 0.);
@@ -44,6 +47,7 @@ fn test_add_edge() {
     assert!(table.pdr_table.contains_key(&2));
 }
 
+/// tests correct node removal
 #[test]
 fn test_remove_node() {
     let estimator: PdrEstimator = PdrEstimator::new(2, |_, _, _| 0.);
@@ -55,6 +59,7 @@ fn test_remove_node() {
     assert!(table.pdr_table.contains_key(&2));
 }
 
+/// test edge queries
 #[test]
 fn test_contains_edge() {
     let graph: NetworkGraph = get_dummy_graph();
@@ -67,6 +72,7 @@ fn test_contains_edge() {
     assert!(table.graph.contains_edge(1, 4) == table.contains_edge(1, 4));
 }
 
+/// tests correct pdr_table update after k samples
 #[test]
 fn test_update_pdr_table() {
     let estimator: PdrEstimator =
@@ -88,6 +94,7 @@ fn test_update_pdr_table() {
     assert!((table.pdr_table.get(&1).unwrap().0 - 0.8).abs() < 1e-6);
 }
 
+/// tests correct graph weights update afteer a pdr_table update
 #[test]
 fn test_update_pdr_graph() {
     let estimator: PdrEstimator =
@@ -113,6 +120,7 @@ fn test_update_pdr_graph() {
     assert!(*table.graph.edge_weight(2, 1).unwrap() == INITIAL_ETX);
 }
 
+/// tests consistency in weights after possible adge insertion
 #[test]
 fn test_check_and_add_edge() {
     let estimator: PdrEstimator = PdrEstimator::new(2, |_, _, _| 0.);
@@ -125,6 +133,7 @@ fn test_check_and_add_edge() {
     assert!(*table.graph.edge_weight_mut(1, 2).unwrap() == 1.);
 }
 
+/// tests infinity convergence of ETX
 #[test]
 fn test_infinite_etx() {
     let estimator: PdrEstimator =
@@ -141,6 +150,7 @@ fn test_infinite_etx() {
     assert!(*table.graph.edge_weight(1, 2).unwrap() == 2.);
 }
 
+/// tests routing path generation
 #[test]
 fn test_get_route() {
     let graph: NetworkGraph = NetworkGraph::from_edges([
@@ -167,6 +177,7 @@ fn test_get_route() {
     assert!(table.get_route(0, 43).is_none());
 }
 
+/// tests route path generation with infinity as a weight (avoiding infinity)
 #[test]
 fn test_get_route_infinite_etx() {
     let graph: NetworkGraph = NetworkGraph::from_edges([
@@ -193,6 +204,7 @@ fn test_get_route_infinite_etx() {
     assert!(table.get_route(0, 43).is_none());
 }
 
+/// tests route path generation with infinity as a weight (through infinity)
 #[test]
 fn test_get_route_infinite_cost() {
     let graph: NetworkGraph = NetworkGraph::from_edges([(0, 1, 4.), (1, 2, f64::INFINITY)]);

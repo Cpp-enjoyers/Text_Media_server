@@ -1,3 +1,4 @@
+/// module with testing of Client/Server interaction if a double chain network
 #[cfg(test)]
 mod client_interaction_tests {
     #[allow(unused_imports)]
@@ -30,6 +31,7 @@ mod client_interaction_tests {
         GenericServer,
     };
 
+    /// instanciates a dummy scl and a double chain network topology with 10 drones, 1 client and 2 servers
     fn instanciate_testing_topology() -> (
         Vec<Sender<DroneCommand>>,
         Receiver<DroneEvent>,
@@ -147,6 +149,14 @@ mod client_interaction_tests {
         )
     }
 
+    /// generic test of a full protocol interaction, for the specialised tests see below
+    /// the only thing to specialise is the file to request
+    /// 
+    /// the interaction is as follows:
+    /// - Type query
+    /// - Listing of file
+    /// - Reuqest of html text file
+    /// - Optional request of media files
     fn generic_full_file_request(
         devents: Receiver<DroneEvent>,
         stctrl: Sender<ServerCommand>,
@@ -198,6 +208,7 @@ mod client_interaction_tests {
         assert!(_flag);
     }
 
+    /// specialisation of [generic_full_file_request]
     #[test]
     #[ignore = "computationally expensive"]
     fn test_full_text_file_request1() {
@@ -217,6 +228,7 @@ mod client_interaction_tests {
         );
     }
 
+    /// specialisation of [generic_full_file_request]
     #[test]
     #[ignore = "computationally expensive"]
     fn test_full_text_file_request2() {
@@ -237,6 +249,7 @@ mod client_interaction_tests {
         );
     }
 
+    /// specialisation of [generic_full_file_request]
     #[test]
     #[ignore = "computationally expensive"]
     fn test_full_text_file_request3() {
@@ -259,6 +272,7 @@ mod client_interaction_tests {
         );
     }
 
+    /// specialisation of [generic_full_file_request]
     #[test]
     #[ignore = "computationally expensive"]
     fn test_full_text_file_request4() {
@@ -281,6 +295,7 @@ mod client_interaction_tests {
         );
     }
 
+    /// specialisation of [generic_full_file_request]
     #[test]
     #[ignore = "computationally expensive"]
     fn test_after_crashed_drone() {
@@ -315,17 +330,20 @@ mod client_interaction_tests {
         );
     }
 
-    /*
+    /// specialisation of [generic_full_file_request]
     #[test]
     #[ignore = "computationally expensive"]
     fn test_after_removed_drone1() {
-        let (dcmds, _devents, stctrl, _stevents, _smctrl, _smevents, cctrl, cevents) =
+        let (dcmds, devents, stctrl, _stevents, smctrl, _smevents, cctrl, cevents) =
             instanciate_testing_topology();
         sleep(Duration::from_secs(3));
         let _ = stctrl.send(ServerCommand::RemoveSender(0));
         let _ = dcmds[0].send(DroneCommand::RemoveSender(11));
         sleep(Duration::from_secs(3));
         generic_full_file_request(
+            devents,
+            stctrl,
+            smctrl,
             cevents,
             cctrl,
             "./public/file.html".to_owned(),
@@ -335,8 +353,8 @@ mod client_interaction_tests {
             },
         );
     }
-     */
 
+    /// specialisation of [generic_full_file_request]
     #[test]
     #[ignore = "computationally expensive"]
     fn test_after_removed_drone2() {

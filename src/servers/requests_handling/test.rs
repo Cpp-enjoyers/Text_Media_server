@@ -28,6 +28,8 @@ mod request_tests {
         GenericServer,
     };
 
+    /// generic test of correct handling of fully received requests
+    /// for the specialized tests see below
     fn test_handle_request<T: ST, U: Compressor>(
         mut server: GenericServer<T>,
         mut compressor: U,
@@ -80,6 +82,7 @@ mod request_tests {
         assert!(resp == response);
     }
 
+    /// test correct dir listing
     #[test]
     fn list_dir_test() {
         let mut l: Vec<String> = list_dir(TEXT_PATH).unwrap_or_default();
@@ -95,6 +98,7 @@ mod request_tests {
         );
     }
 
+    /// tests correct [Nack] resend behaviour when a routing path is available
     #[test]
     fn test_resend_route_update() {
         let mut server: GenericServer<servers::Text> = get_dummy_server_text();
@@ -128,6 +132,7 @@ mod request_tests {
         assert!(server.sent_history.get(&0).unwrap().hops == vec![0, 1, 2]);
     }
 
+    /// tests correct [Nack] resend behaviour when a routing path is not available
     #[test]
     fn test_resend_route_no_update() {
         let mut server: GenericServer<servers::Text> = get_dummy_server_text();
@@ -149,6 +154,7 @@ mod request_tests {
         assert!(server.sent_history.get(&0).unwrap().hops == vec![0, 2]);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_text_server_handle_type_request() {
         let compressor: LZWCompressor = LZWCompressor::new();
@@ -158,6 +164,7 @@ mod request_tests {
         test_handle_request(get_dummy_server_text(), compressor, request, response);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_text_server_handle_file_list_request() {
         let compressor: LZWCompressor = LZWCompressor::new();
@@ -170,6 +177,7 @@ mod request_tests {
         test_handle_request(get_dummy_server_text(), compressor, request, response);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_text_server_handle_file_request() {
         let compressor: LZWCompressor = LZWCompressor::new();
@@ -186,6 +194,7 @@ mod request_tests {
         test_handle_request(get_dummy_server_text(), compressor, request, response);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_text_server_handle_unknown_file_request() {
         let compressor: LZWCompressor = LZWCompressor::new();
@@ -196,6 +205,7 @@ mod request_tests {
         test_handle_request(get_dummy_server_text(), compressor, request, response);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_text_server_handle_media_request() {
         let compressor: LZWCompressor = LZWCompressor::new();
@@ -206,6 +216,7 @@ mod request_tests {
         test_handle_request(get_dummy_server_text(), compressor, request, response);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_media_server_handle_type_request() {
         let compressor: LZWCompressor = LZWCompressor::new();
@@ -215,6 +226,7 @@ mod request_tests {
         test_handle_request(get_dummy_server_media(), compressor, request, response);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_media_server_handle_file_list_request() {
         let compressor: LZWCompressor = LZWCompressor::new();
@@ -227,6 +239,7 @@ mod request_tests {
         test_handle_request(get_dummy_server_media(), compressor, request, response);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_media_server_handle_file_request() {
         let compressor: HuffmanCompressor = HuffmanCompressor::new();
@@ -243,6 +256,7 @@ mod request_tests {
         test_handle_request(get_dummy_server_media(), compressor, request, response);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_media_server_handle_unknown_file_request() {
         let compressor: LZWCompressor = LZWCompressor::new();
@@ -253,6 +267,7 @@ mod request_tests {
         test_handle_request(get_dummy_server_media(), compressor, request, response);
     }
 
+    /// specialised [test_handle_request]
     #[test]
     fn test_media_server_handle_text_request() {
         let compressor: LZWCompressor = LZWCompressor::new();

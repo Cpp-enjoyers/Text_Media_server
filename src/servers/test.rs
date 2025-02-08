@@ -10,6 +10,7 @@ mod command_tests {
         GenericServer,
     };
 
+    /// tests the correct handling of the [ServerCommand::AddSender]
     #[test]
     fn test_add_command() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -22,6 +23,7 @@ mod command_tests {
         assert!(server.need_flood);
     }
 
+    /// tests the correct handling of the [ServerCommand::RemoveSender]
     #[test]
     fn test_remove_command() {
         let mut server: GenericServer<Text> = get_dummy_server_text();

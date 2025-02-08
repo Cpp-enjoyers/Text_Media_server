@@ -14,6 +14,7 @@ mod packet_tests {
         GenericServer,
     };
 
+    /// tests correct [Ack] handling
     #[test]
     fn test_ack() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -36,6 +37,7 @@ mod packet_tests {
         assert!(server.sent_history.len() == 1);
     }
 
+    /// tests correct [Nack] to pending behaviour 
     #[test]
     fn test_nack_to_pending() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -50,6 +52,7 @@ mod packet_tests {
         assert_eq!(server.pending_packets.pop_back().unwrap(), 0);
     }
 
+    /// tests correct [Nack] resend behaviour
     #[test]
     fn test_nack_resend() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -81,6 +84,7 @@ mod packet_tests {
         }
     }
 
+    /// test [Nack] behaviour in the event of multiple ones
     #[test]
     fn test_nack_resend_trice() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -117,6 +121,7 @@ mod packet_tests {
         assert!(dr.try_recv().is_err());
     }
 
+    /// test graph consistency update in the event of a [NackType::ErrorInRouting]
     #[test]
     fn test_nack_routing_error() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -136,6 +141,7 @@ mod packet_tests {
         assert!(!server.network_graph.get_graph().contains_node(1));
     }
 
+    /// tests correct [Ack] shortcutting in case of missing route
     #[test]
     fn test_fragment_recv_scl_ack() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -170,6 +176,7 @@ mod packet_tests {
         }
     }
 
+    /// tests correct [Ack] sending in case of existing route
     #[test]
     fn test_fragment_recv_drone_ack() {
         let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -197,6 +204,7 @@ mod packet_tests {
         }
     }
 
+    /// tests correct handling of ill formed fragments
     #[test]
     fn test_bad_fragment_recv() {
         let mut server: GenericServer<Text> = get_dummy_server_text();

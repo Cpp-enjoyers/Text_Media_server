@@ -6,6 +6,7 @@ mod serialization_tests {
 
     use crate::servers::serialization::{defragment_deserialize_request, fragment_response};
 
+    /// tests the correct fragmentation of the response
     #[test]
     fn test_fragment1() {
         let resp: ResponseMessage =
@@ -21,6 +22,7 @@ mod serialization_tests {
         assert_eq!(resp_d.unwrap(), resp);
     }
 
+    /// tests the correct fragmentation of the response
     #[test]
     fn test_fragment2() {
         let resp: ResponseMessage = ResponseMessage::new_text_list_response(
@@ -39,6 +41,7 @@ mod serialization_tests {
         assert_eq!(resp_d.unwrap(), resp);
     }
 
+    /// tests the correct fragmentation of the response
     #[test]
     fn test_fragment3() {
         let file_data: String =
@@ -79,6 +82,7 @@ mod serialization_tests {
         assert_eq!(resp_d.unwrap(), resp);
     }
 
+    /// tests the correct fragmentation of the response
     #[test]
     fn test_fragment4() {
         let resp: ResponseMessage = ResponseMessage::new_text_list_response(
@@ -97,6 +101,7 @@ mod serialization_tests {
         assert!(resp_d.is_err());
     }
 
+    /// tests the correct defragmentation of the request
     #[test]
     fn test_defragment1() {
         let req: RequestMessage =
@@ -109,6 +114,7 @@ mod serialization_tests {
         assert_eq!(req_d.unwrap(), req);
     }
 
+    /// tests the correct defragmentation of the request
     #[test]
     fn test_defragment2() {
         let req: RequestMessage = RequestMessage::new_type_request(0, Compression::LZW);
@@ -120,6 +126,7 @@ mod serialization_tests {
         assert_eq!(req_d.unwrap(), req);
     }
 
+    /// tests the correct defragmentation of the request
     #[test]
     fn test_defragment3() {
         let req: RequestMessage = RequestMessage::new_text_list_request(0, Compression::LZW);
@@ -131,6 +138,7 @@ mod serialization_tests {
         assert_eq!(req_d.unwrap(), req);
     }
 
+    /// tests the correct defragmentation of the request
     #[test]
     fn test_defragment4() {
         let req: RequestMessage = RequestMessage::new_text_list_request(0, Compression::LZW);

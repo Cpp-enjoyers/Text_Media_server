@@ -25,17 +25,6 @@ where
     let b_es = b.all_edges().map(|e| ((e.0, e.1, *e.2)));
     a_es.sorted_by(|a, b| a.partial_cmp(b).unwrap())
         .eq(b_es.sorted_by(|a, b| a.partial_cmp(b).unwrap()))
-    /*
-    for (a, b, c) in a_es.sorted_by(|a, b| a.partial_cmp(b).unwrap()) {
-        print!("{a}, {b}, {c} - ");
-    }
-    println!("\n---");
-    for (a, b, c) in b_es.sorted_by(|a, b| a.partial_cmp(b).unwrap()) {
-        print!("{a}, {b}, {c} - ");
-    }
-    println!("\n-----");
-    true
-     */
 }
 
 /// get a minimal [`GenericServer<Text>`]

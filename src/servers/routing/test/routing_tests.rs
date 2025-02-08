@@ -37,6 +37,7 @@ where
     a_ns.eq(b_ns) && a_es.eq(b_es)
 }
 
+/// tests edge add to the [RoutingTable]
 #[test]
 fn add_edge_test1() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -54,6 +55,7 @@ fn add_edge_test1() {
     ));
 }
 
+/// tests correct update of the [RoutingTable] after a new flood response
 #[test]
 fn test_update_from_flood() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -89,6 +91,7 @@ fn test_update_from_flood() {
     assert!(graphmap_eq(&server.network_graph.get_graph(), &res,));
 }
 
+/// tests correct update of the [RoutingTable] from a [SourceRoutingHeader]
 #[test]
 fn test_update_from_hdr() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -112,6 +115,7 @@ fn test_update_from_hdr() {
     assert!(graphmap_eq(&server.network_graph.get_graph(), &res));
 }
 
+/// tests routing path finding
 #[test]
 fn test_get_srch_from_graph() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -131,6 +135,8 @@ fn test_get_srch_from_graph() {
     );
 }
 
+/// tests whether the [GenericServer] correctly fallbacks to the [SourceRoutingHeader] after
+/// failing to find a proper routing path
 #[test]
 fn test_get_srch_from_srch() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -145,6 +151,7 @@ fn test_get_srch_from_srch() {
     );
 }
 
+/// tests edge behaviours consistency among the different functions (add, update)
 #[test]
 fn test_graph_consistency() {
     let (ctrls, _) = crossbeam_channel::unbounded();
@@ -188,6 +195,7 @@ fn test_graph_consistency() {
     ));
 }
 
+/// tests whether the ETX estimator correctly goes to infinity and back or not
 #[test]
 fn test_etx_nacks_update_to_inf_and_back() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -245,6 +253,7 @@ fn test_etx_nacks_update_to_inf_and_back() {
     assert!(*server.network_graph.get_graph().edge_weight(1, 2).unwrap() != f64::INFINITY);
 }
 
+/// tests whether the ETX corretly converges to 1. or not
 #[test]
 fn test_etx_acks_update_to_1() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
@@ -282,6 +291,7 @@ fn test_etx_acks_update_to_1() {
     assert!((*server.network_graph.get_graph().edge_weight(1, 2).unwrap() - 1.).abs() < 1e-3);
 }
 
+/// tests whether the [GenericServer] correctly switches route after an ETX update or not
 #[test]
 fn test_route_after_etx_update() {
     let mut server: GenericServer<Text> = get_dummy_server_text();
