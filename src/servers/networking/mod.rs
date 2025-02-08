@@ -15,7 +15,7 @@ mod test;
 
 /// trait to handle flood requests
 impl<T: ServerType> Flooder for GenericServer<T> {
-    /// [NodeType] of the [GenericServer]
+    /// [`NodeType`] of the [`GenericServer`]
     const NODE_TYPE: NodeType = NodeType::Server;
 
     #[inline]
@@ -85,7 +85,7 @@ impl<T: ServerType> GenericServer<T> {
         }
     }
 
-    /// starts a new [FloodRequest]
+    /// starts a new [`FloodRequest`]
     pub(super) fn flood(&mut self) {
         let flood: Packet = Packet::new_flood_request(
             SourceRoutingHeader::empty_route(),

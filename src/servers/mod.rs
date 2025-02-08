@@ -61,7 +61,7 @@ struct HistoryEntry {
 }
 
 impl HistoryEntry {
-    /// Creates a new [HistoryEntry] from the given parameters
+    /// Creates a new [`HistoryEntry`] from the given parameters
     #[inline]
     #[must_use]
     fn new(
@@ -83,28 +83,28 @@ impl HistoryEntry {
 
 /// Data structure used to handle received fragments and map them to the related
 /// request id
-/// maps (SenderId, rid) -> (#recv_fragments, fragments)
+/// maps (`SenderId`, rid) -> (#`recv_fragments`, fragments)
 type FragmentHistory = HashMap<(NodeId, u16), (u64, Vec<[u8; FRAGMENT_DSIZE]>)>;
 /// Data structure used to cache sended packets that are yet to be acknowledged
 type MessageHistory = HashMap<u64, HistoryEntry>;
 /// Data structure used to remember already seen flood ids
 type FloodHistory = HashMap<NodeId, RingBuffer<u64>>;
 /// Used graph to represent the network
-/// the graph is directional with NodeIds as nodes and f64 as waights
+/// the graph is directional with `NodeIds` as nodes and f64 as waights
 type NetworkGraph = DiGraphMap<NodeId, f64>;
 /// Queue of packets pending: these are the packets waiting to be sent due
 /// to the server not being able to find a route when they were handled
 type PendingQueue = VecDeque<u64>;
 
-/// path of the [TextServer] files
+/// path of the [`TextServer`] files
 const TEXT_PATH: &str = "./public/";
-/// path of the [MediaServer] files
+/// path of the [`MediaServer`] files
 const MEDIA_PATH: &str = "./media/";
 /// Initial pdr assigned to the drone (note PDR = 1 / ETX), we use a uniform approach so
 /// the initial value is 0.5. another approach could be to set the initial value to
 /// Beta(1, 1) and follow the baesyan approach
 const INITIAL_PDR: f64 = 0.5; // Beta(1, 1), is a baesyan approach better?
-/// Intial ETX of the drone, depends in [INITIAL_PDR]
+/// Intial ETX of the drone, depends in [`INITIAL_PDR`]
 const INITIAL_ETX: f64 = 1. / INITIAL_PDR;
 /// default window size used by the ETX estimator for the EWMA
 const DEFAULT_WINDOW_SZ: u32 = 12;
@@ -113,14 +113,14 @@ const DEFAULT_ALPHA: f64 = 0.35;
 /// beta constant of the EWMA
 const DEFAULT_BETA: f64 = 1. - DEFAULT_ALPHA;
 
-/// Marker trait used to represent the `ServerType` of a [GenericServer]
+/// Marker trait used to represent the `ServerType` of a [`GenericServer`]
 pub trait ServerType {}
 
-/// One of the two default types of a [GenericServer], the [MediaServer]
+/// One of the two default types of a [`GenericServer`], the [`MediaServer`]
 /// handles requests related to the images contained in the files sent
-/// by the [TextServer]
+/// by the [`TextServer`]
 pub struct Media {}
-/// One of the two default types of a [GenericServer], the [TextServer]
+/// One of the two default types of a [`GenericServer`], the [`TextServer`]
 /// handles file requests. The default format used is html so that also
 /// images can be embedded in the document, if needed
 pub struct Text {}
@@ -128,11 +128,11 @@ pub struct Text {}
 impl ServerType for Media {}
 impl ServerType for Text {}
 
-/// Trait utilized to speicalise [GenericServer<T: ServerType>]. This trait
+/// Trait utilized to speicalise [`GenericServer`<T: `ServerType`>]. This trait
 /// allows to specify how the server should handle the received protocol
-/// requests based on its [ServerType]
+/// requests based on its [`ServerType`]
 pub trait RequestHandler {
-    /// Function to implement the desired behaviour of a specialised [GenericServer]
+    /// Function to implement the desired behaviour of a specialised [`GenericServer`]
     fn handle_request(
         &mut self,
         srch: &SourceRoutingHeader,
@@ -149,7 +149,7 @@ pub type MediaServer = GenericServer<Media>;
 
 /// Struct containing all the necessary information for a server to correctly
 /// handle received packets according to the network protocol. <br>
-/// Requires a generic type that implements [ServerType] and the trait [RequestHandler]
+/// Requires a generic type that implements [`ServerType`] and the trait [`RequestHandler`]
 /// to implement the desired behaviour in the high level protocol
 pub struct GenericServer<T: ServerType> {
     /// id of the node
@@ -165,14 +165,14 @@ pub struct GenericServer<T: ServerType> {
     /// this is useful as it allows to know when to try
     /// sending again the pending packets
     graph_updated: bool,
-    /// channel to communicate [ServerEvent]s to the controller
+    /// channel to communicate [`ServerEvent`]s to the controller
     controller_send: Sender<ServerEvent>,
-    /// channel to receive [ServerCommand]s from the controller
+    /// channel to receive [`ServerCommand`]s from the controller
     controller_recv: Receiver<ServerCommand>,
     /// channel to receive [Packet]s from the drones
     packet_recv: Receiver<Packet>,
     /// map containing the channel to send [Packet]s to the drones
-    /// mapped to their relative [NodeId]s
+    /// mapped to their relative [`NodeId`]s
     packet_send: HashMap<NodeId, Sender<Packet>>,
     /// history of the last 64 flood ids seen for each known
     /// initiator
@@ -186,17 +186,17 @@ pub struct GenericServer<T: ServerType> {
     network_graph: RoutingTable,
     /// queue of [Packet]s waiting to be re sent
     pending_packets: PendingQueue,
-    /// marker used to specify the [GenericServer]'s type
+    /// marker used to specify the [`GenericServer`]'s type
     _marker: PhantomData<T>,
 }
 
-/// Default estiamtor used by the [GenericServer]: the estimator uses an exponentially
+/// Default estiamtor used by the [`GenericServer`]: the estimator uses an exponentially
 /// weighted moving average (EWMA).
 /// the formula is as follows:
 ///     ETX(n) = p(n) * alpha + ETX(n - 1) * beta
-///     ETX(0) = [INITIAL_ETX]
+///     ETX(0) = [`INITIAL_ETX`]
 /// where ETX(n) is the ETX at time n
-/// p(n) is the estimated ETX at time n, estimated from the last [DEFAULT_WINDOW_SZ] samples
+/// p(n) is the estimated ETX at time n, estimated from the last [`DEFAULT_WINDOW_SZ`] samples
 /// alpha and beta are parameters that decide how fast the ETX adapts to change
 fn default_estimator() -> PdrEstimator {
     PdrEstimator::new(DEFAULT_WINDOW_SZ, |old: f64, acks: u32, nacks: u32| {
@@ -268,7 +268,7 @@ impl<T: ServerType> Server for GenericServer<T>
 where
     GenericServer<T>: RequestHandler,
 {
-    /// creates a new [GenericServer] from the given network channels
+    /// creates a new [`GenericServer`] from the given network channels
     fn new(
         id: NodeId,
         controller_send: Sender<ServerEvent>,
@@ -303,7 +303,7 @@ where
         }
     }
 
-    /// main loop of the [GenericServer]
+    /// main loop of the [`GenericServer`]
     fn run(&mut self) {
         loop {
             if self.need_flood {

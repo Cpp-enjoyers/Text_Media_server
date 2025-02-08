@@ -28,7 +28,7 @@ where
         }
     }
 
-    /// tries to resend the lost [Packet] and, in case of [NackType::ErrorInRouting], if updates
+    /// tries to resend the lost [Packet] and, in case of [`NackType::ErrorInRouting`], if updates
     /// the pdr accordingly
     pub(super) fn handle_nack(&mut self, sid: u64, srch: &SourceRoutingHeader, nack: &Nack) {
         info!(target: &self.target_topic, "Handling received nack: {nack}");

@@ -173,7 +173,7 @@ impl<T: ST> GenericServer<T> {
     }
 }
 
-/// [super::TextServer] specialization code
+/// [`super::TextServer`] specialization code
 impl RequestHandler for GenericServer<Text> {
     fn handle_request(
         &mut self,
@@ -225,7 +225,7 @@ impl RequestHandler for GenericServer<Text> {
     }
 }
 
-/// [super::MediaServer] specialization code
+/// [`super::MediaServer`] specialization code
 impl RequestHandler for GenericServer<Media> {
     fn handle_request(
         &mut self,

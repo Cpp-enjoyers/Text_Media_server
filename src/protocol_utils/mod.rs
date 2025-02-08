@@ -11,7 +11,7 @@ pub(crate) const RID_MASK: u64 = 0x0000_0000_0000_FFFF;
 ///
 /// In the protocol a reponse id is 64 bit where:
 /// - the 16 least significant bits represent the request id
-/// of the request associated with the response
+///     of the request associated with the response
 /// - the other 48 are the current session id of the Server
 ///
 /// For example:

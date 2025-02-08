@@ -14,14 +14,14 @@ use crate::servers::{GenericServer, NetworkGraph, ServerType, INITIAL_ETX, INITI
 #[cfg(test)]
 mod test;
 
-/// entry of the pdr_table maintained in the [RoutingTable]
+/// entry of the `pdr_table` maintained in the [`RoutingTable`]
 /// PdrEntry(ETX(n - 1), #acks at time n, #nacks at time n)
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 /// (old, acks, nacks)
 struct PdrEntry(f64, u32, u32);
 
 /// generic pdr estimator, can implement a lot of different stategies
-/// from the given information (old_etx, #acks, #nacks)
+/// from the given information (`old_etx`, #acks, #nacks)
 #[derive(Debug, Clone)]
 pub(crate) struct PdrEstimator {
     /// window size for time n
@@ -31,7 +31,7 @@ pub(crate) struct PdrEstimator {
 }
 
 impl PdrEstimator {
-    /// creates a new [PdrEstimator] from the given parameters
+    /// creates a new [`PdrEstimator`] from the given parameters
     #[inline]
     #[must_use]
     pub(crate) fn new(
@@ -51,7 +51,7 @@ impl PdrEstimator {
 pub(crate) struct RoutingTable /* <const WINDOW_SIZE: u8> */ {
     /// graph representing the network
     graph: NetworkGraph,
-    /// pdr_table to chace current pdr estimations
+    /// `pdr_table` to chace current pdr estimations
     pdr_table: HashMap<NodeId, PdrEntry>,
     /// estimator function
     pdr_estimator: PdrEstimator,
@@ -61,7 +61,7 @@ impl RoutingTable {
     /// after this limit the PDR is considered 0
     const EPSILON: f64 = 1e-3;
 
-    /// creates a new [RoutingTable] from the given parameters
+    /// creates a new [`RoutingTable`] from the given parameters
     #[inline]
     #[must_use]
     pub(crate) fn new(pdr_estimator: PdrEstimator) -> Self {
@@ -72,7 +72,7 @@ impl RoutingTable {
         }
     }
 
-    /// creates a new [RoutingTable] from an existing [NetworkGraph]   
+    /// creates a new [`RoutingTable`] from an existing [`NetworkGraph`]   
     #[must_use]
     pub(crate) fn new_with_graph(mut graph: NetworkGraph, pdr_estimator: PdrEstimator) -> Self {
         let it = graph.nodes().map(|n: u8| (n, PdrEntry(INITIAL_PDR, 0, 0)));
@@ -101,7 +101,7 @@ impl RoutingTable {
         self.graph.contains_edge(from, to)
     }
 
-    /// adds and edge to the graph and the nodes to the pdr_table
+    /// adds and edge to the graph and the nodes to the `pdr_table`
     /// if they were not present already
     fn add_edge(&mut self, from: NodeId, to: NodeId) -> Option<f64> {
         self.pdr_table
@@ -120,7 +120,7 @@ impl RoutingTable {
             .is_some()
     }
 
-    /// updates the pdr_table after a measurement
+    /// updates the `pdr_table` after a measurement
     pub(super) fn update_pdr(&mut self, id: NodeId, recv: bool) -> bool {
         if self.pdr_table.contains_key(&id) {
             let entry: &mut PdrEntry = self.pdr_table.get_mut(&id).unwrap();
@@ -165,7 +165,7 @@ impl RoutingTable {
         .map(|(_, path)| path)
     }
 
-    /// remove a node from the [RoutingTable]
+    /// remove a node from the [`RoutingTable`]
     #[inline]
     pub(crate) fn remove_node(&mut self, id: NodeId) -> bool {
         self.pdr_table.remove(&id);
@@ -174,7 +174,7 @@ impl RoutingTable {
 }
 
 impl<T: ServerType> GenericServer<T> {
-    /// wrapper of [RoutingTable::check_and_add_edge]
+    /// wrapper of [`RoutingTable::check_and_add_edge`]
     #[inline]
     pub(crate) fn check_and_add_edge(&mut self, from: u8, to: u8) -> bool {
         self.network_graph.check_and_add_edge(from, to)
@@ -205,7 +205,7 @@ impl<T: ServerType> GenericServer<T> {
         }
     }
 
-    /// updates the graph from the info received from a [FloodResponse]
+    /// updates the graph from the info received from a [`FloodResponse`]
     pub(crate) fn update_network_from_flood(&mut self, fr: &FloodResponse) {
         for ((prev_id, prev_type), (next_id, next_type)) in fr.path_trace.iter().tuple_windows() {
             match (prev_type, next_type) {
@@ -234,7 +234,7 @@ impl<T: ServerType> GenericServer<T> {
         }
     }
 
-    /// updates the graph from the info received from a [SourceRoutingHeader]
+    /// updates the graph from the info received from a [`SourceRoutingHeader`]
     pub(crate) fn update_network_from_header(&mut self, srch: &SourceRoutingHeader) {
         info!("Updating routing info from source routing header");
         let sz: usize = srch.hops.len();
@@ -250,12 +250,12 @@ impl<T: ServerType> GenericServer<T> {
         self.check_and_add_edge(srch.hops[sz - 1], srch.hops[sz - 2]);
     }
 
-    /// wrapper of [RoutingTable::get_route]
+    /// wrapper of [`RoutingTable::get_route`]
     pub(crate) fn get_route(&self, dest: NodeId) -> Option<Vec<NodeId>> {
         self.network_graph.get_route(self.id, dest)
     }
 
-    /// tries to get a path for the response, if it fails it inverts the [SourceRoutingHeader]
+    /// tries to get a path for the response, if it fails it inverts the [`SourceRoutingHeader`]
     /// of the received message
     pub(crate) fn get_routing_hdr_with_hint(
         &mut self,

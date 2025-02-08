@@ -1,12 +1,12 @@
 /*!
- * # `CppEnjoyers` implementation of [TextServer] and [MediaServer]
+ * # `CppEnjoyers` implementation of [`TextServer`] and [`MediaServer`]
  *
  * Supports compression of packets (if requested by client).
  * Available compressions are:
  * - Huffman
  * - LZW
  *
- * The [GenericServer] uses ETX estimation to decide the best routing paths.
+ * The [`GenericServer`] uses ETX estimation to decide the best routing paths.
  *
  * The estimator uses an exponentially weighted moving average (EWMA),
  * the formula is as follows:
@@ -46,7 +46,7 @@ mod integration_test;
 /// This module offers utilities to calculate session ids and request ids
 /// as specified by the protocol implemented by Clients and Servers
 pub mod protocol_utils;
-/// This module contains the public API of [GenericServer], the struct used
+/// This module contains the public API of [`GenericServer`], the struct used
 /// to implement a server that can adhere to the used protocol and that can
 /// be extended to handle the request in the necessary way according to
 /// its [`servers::ServerType`]
