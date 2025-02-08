@@ -1,11 +1,11 @@
-# `CppEnjoyers` implementation of [`TextServer`] and [`MediaServer`]
+# `CppEnjoyers` implementation of `TextServer` and `MediaServer`
 
  Supports compression of packets (if requested by client).
  Available compressions are:
  - Huffman
  - LZW
 
- The [`GenericServer`] uses ETX estimation to decide the best routing paths.
+ The `GenericServer` uses ETX estimation to decide the best routing paths.
 
  The estimator uses an exponentially weighted moving average (EWMA),
  the formula is as follows:
