@@ -38,6 +38,7 @@ where
      */
 }
 
+/// get a minimal [`GenericServer<Text>`]
 #[must_use]
 pub(super) fn get_dummy_server_text() -> GenericServer<Text> {
     let (ctrl_send, _) = crossbeam_channel::unbounded();
@@ -48,6 +49,7 @@ pub(super) fn get_dummy_server_text() -> GenericServer<Text> {
     server
 }
 
+/// get a minimal [`GenericServer<Media>`]
 #[must_use]
 pub(super) fn get_dummy_server_media() -> GenericServer<Media> {
     let (ctrl_send, _) = crossbeam_channel::unbounded();

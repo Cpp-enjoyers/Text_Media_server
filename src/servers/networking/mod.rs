@@ -9,10 +9,13 @@ use wg_2024::{
 use super::{GenericServer, ServerType};
 use crate::protocol_utils as network_protocol;
 
+/// testing module
 #[cfg(test)]
 mod test;
 
+/// trait to handle flood requests
 impl<T: ServerType> Flooder for GenericServer<T> {
+    /// [NodeType] of the [GenericServer]
     const NODE_TYPE: NodeType = NodeType::Server;
 
     #[inline]
@@ -45,6 +48,8 @@ impl<T: ServerType> Flooder for GenericServer<T> {
 }
 
 impl<T: ServerType> GenericServer<T> {
+    /// handles a flood response, if the initiator is the Server itself, it udaptes the
+    /// netowrk graph. else if forward the packet as required by the protocol
     pub(super) fn handle_flood_response(
         &mut self,
         mut srch: SourceRoutingHeader,
@@ -52,6 +57,7 @@ impl<T: ServerType> GenericServer<T> {
         fr: FloodResponse,
     ) {
         match fr.path_trace.first() {
+            // match guard
             Some((id, _)) if *id == self.id => {
                 self.update_network_from_flood(&fr);
                 self.graph_updated = true;
@@ -79,6 +85,7 @@ impl<T: ServerType> GenericServer<T> {
         }
     }
 
+    /// starts a new [FloodRequest]
     pub(super) fn flood(&mut self) {
         let flood: Packet = Packet::new_flood_request(
             SourceRoutingHeader::empty_route(),

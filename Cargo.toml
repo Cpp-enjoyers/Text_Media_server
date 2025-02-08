@@ -1,5 +1,5 @@
 [package]
-name = "servers"
+name = "ap2024_unitn_cppenjoyers_webservers"
 version = "0.1.0"
 edition = "2021"
 

@@ -28,9 +28,11 @@ use super::{
 use crate::protocol_utils as network_protocol;
 use crate::servers::{ServerType as ST, MEDIA_PATH, TEXT_PATH};
 
+/// testing module
 #[cfg(test)]
 mod test;
 
+/// lists the contents of a directory
 fn list_dir(path: &str) -> Result<Vec<String>, io::Error> {
     Ok(fs::read_dir(path)?
         .filter(Result::is_ok)
@@ -41,6 +43,7 @@ fn list_dir(path: &str) -> Result<Vec<String>, io::Error> {
 }
 
 impl<T: ST> GenericServer<T> {
+    /// compresses the data based on the requested type
     fn compress(data: Vec<u8>, comp: &Compression) -> Result<Vec<u8>, String> {
         match comp {
             Compression::Huffman => HuffmanCompressor::new()
@@ -53,6 +56,8 @@ impl<T: ST> GenericServer<T> {
         }
     }
 
+    /// send response realted to a fully received request.
+    /// the response will have the same rid of the response as required by the protocol
     pub(super) fn send_response(
         &mut self,
         srch: &SourceRoutingHeader,
@@ -105,6 +110,7 @@ impl<T: ST> GenericServer<T> {
                         let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
                     }
                 } else {
+                    // no route, send to pending queue
                     for (i, frag) in data.into_iter().enumerate() {
                         let sid: u64 = (self.session_id << 16) | u64::from(rid);
                         self.sent_history.insert(
@@ -129,6 +135,8 @@ impl<T: ST> GenericServer<T> {
         }
     }
 
+    /// tries to re send a packet in the pending queue, if it fails this won't be tried again untile the next
+    /// flood
     pub(super) fn resend_packet(
         &mut self,
         sid: u64,
@@ -165,6 +173,7 @@ impl<T: ST> GenericServer<T> {
     }
 }
 
+/// [super::TextServer] specialization code
 impl RequestHandler for GenericServer<Text> {
     fn handle_request(
         &mut self,
@@ -216,6 +225,7 @@ impl RequestHandler for GenericServer<Text> {
     }
 }
 
+/// [super::MediaServer] specialization code
 impl RequestHandler for GenericServer<Media> {
     fn handle_request(
         &mut self,

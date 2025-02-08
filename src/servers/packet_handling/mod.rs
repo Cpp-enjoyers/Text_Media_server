@@ -9,6 +9,7 @@ use wg_2024::{
 use super::{GenericServer, RequestHandler, ServerType};
 use crate::{protocol_utils as network_protocol, servers::HistoryEntry};
 
+/// testing module
 #[cfg(test)]
 mod test;
 
@@ -16,6 +17,8 @@ impl<T: ServerType> GenericServer<T>
 where
     GenericServer<T>: RequestHandler,
 {
+    /// removes the acknowledged [Packet] from the sent history and updates
+    /// the pdr of the drones
     pub(super) fn handle_ack(&mut self, sid: u64, _ack: &Ack) {
         if let Some(entry) = self.sent_history.remove(&sid) {
             self.update_pdr_from_ack(&entry.hops);
@@ -25,6 +28,8 @@ where
         }
     }
 
+    /// tries to resend the lost [Packet] and, in case of [NackType::ErrorInRouting], if updates
+    /// the pdr accordingly
     pub(super) fn handle_nack(&mut self, sid: u64, srch: &SourceRoutingHeader, nack: &Nack) {
         info!(target: &self.target_topic, "Handling received nack: {nack}");
         match nack.nack_type {
@@ -60,6 +65,8 @@ where
         }
     }
 
+    /// handles a received fragment, if the fragment was the last one needed to reconstruct a request
+    /// the request is also handled
     #[allow(clippy::cast_possible_truncation)]
     pub(super) fn handle_fragment(
         &mut self,
@@ -72,7 +79,7 @@ where
             let entry: &mut (u64, Vec<[u8; FRAGMENT_DSIZE]>) =
                 self.fragment_history.entry((id, rid)).or_insert((
                     0,
-                    // should be fine on 64 bit machines
+                    // fine on 64 bit machines
                     vec![[0; FRAGMENT_DSIZE]; frag.total_n_fragments as usize],
                 ));
             entry.1.get_mut(frag.fragment_index as usize).map_or_else(
@@ -94,6 +101,9 @@ where
         }
     }
 
+    /// sends an [Ack] after a successful reception of a fragment
+    /// since [Ack]s are not droppable, if a route is not found, it is sent 
+    /// using the controller shortcut
     pub(super) fn send_ack(
         &mut self,
         srch: &SourceRoutingHeader,
