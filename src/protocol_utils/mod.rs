@@ -8,17 +8,17 @@ pub(crate) const RID_MASK: u64 = 0x0000_0000_0000_FFFF;
 
 /// Generates the response id from the sid and the rid as required
 /// by the protocol.
-/// 
+///
 /// In the protocol a reponse id is 64 bit where:
 /// - the 16 least significant bits represent the request id
 /// of the request associated with the response
 /// - the other 48 are the current session id of the Server
-/// 
+///
 /// For example:
 ///     
 ///     given rid = 0x9 (0b1001) and sid = 0xD (0b1101)
 ///     the resulting response id will be: 0x9000D (0b1001000000001101)
-/// 
+///
 /// Rust example:
 /// ```
 /// # use ap2024_unitn_cppenjoyers_webservers::protocol_utils::generate_response_id;
@@ -36,7 +36,7 @@ pub fn generate_response_id(sid: u64, rid: u16) -> u64 {
 
 /// Returns the next sid to be used by the server, due to how the protocol
 /// works, the sid wraps around 48 bits.
-/// 
+///
 /// This means that the sid can be implemented as a an increasing wrapping counter
 #[inline]
 #[must_use]
@@ -45,7 +45,7 @@ pub fn next_sid(sid: u64) -> u64 {
 }
 
 /// Given a response id extract the rid (i.e. the least significant 16 bits)
-/// 
+///
 /// ```
 /// # use ap2024_unitn_cppenjoyers_webservers::protocol_utils::get_rid;
 /// # fn main() {

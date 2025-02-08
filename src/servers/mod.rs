@@ -28,10 +28,10 @@ use wg_2024::{
 mod networking;
 /// Module containing the necessary functions to handle received packets
 mod packet_handling;
-/// Module containing the necessary functions to handle received requests and 
+/// Module containing the necessary functions to handle received requests and
 /// handle/create associated responses
 mod requests_handling;
-/// Module containing the necessary routing functions to find route paths and 
+/// Module containing the necessary routing functions to find route paths and
 /// estimate drone ETXs
 mod routing;
 /// Module containing auxiliary functions for the serialization and deserialization
@@ -50,7 +50,7 @@ struct HistoryEntry {
     /// Routing header used to send the packet
     /// This is useful to update the ETX of the drones accordingly
     hops: Vec<NodeId>,
-    /// Node id of the receiver 
+    /// Node id of the receiver
     receiver_id: NodeId,
     /// Index of the fragment in the response
     frag_idx: u64,
@@ -100,7 +100,7 @@ type PendingQueue = VecDeque<u64>;
 const TEXT_PATH: &str = "./public/";
 /// path of the [MediaServer] files
 const MEDIA_PATH: &str = "./media/";
-/// Initial pdr assigned to the drone (note PDR = 1 / ETX), we use a uniform approach so 
+/// Initial pdr assigned to the drone (note PDR = 1 / ETX), we use a uniform approach so
 /// the initial value is 0.5. another approach could be to set the initial value to
 /// Beta(1, 1) and follow the baesyan approach
 const INITIAL_PDR: f64 = 0.5; // Beta(1, 1), is a baesyan approach better?
@@ -121,14 +121,14 @@ pub trait ServerType {}
 /// by the [TextServer]
 pub struct Media {}
 /// One of the two default types of a [GenericServer], the [TextServer]
-/// handles file requests. The default format used is html so that also 
+/// handles file requests. The default format used is html so that also
 /// images can be embedded in the document, if needed
 pub struct Text {}
 
 impl ServerType for Media {}
 impl ServerType for Text {}
 
-/// Trait utilized to speicalise [GenericServer<T: ServerType>]. This trait 
+/// Trait utilized to speicalise [GenericServer<T: ServerType>]. This trait
 /// allows to specify how the server should handle the received protocol
 /// requests based on its [ServerType]
 pub trait RequestHandler {
@@ -149,7 +149,7 @@ pub type MediaServer = GenericServer<Media>;
 
 /// Struct containing all the necessary information for a server to correctly
 /// handle received packets according to the network protocol. <br>
-/// Requires a generic type that implements [ServerType] and the trait [RequestHandler] 
+/// Requires a generic type that implements [ServerType] and the trait [RequestHandler]
 /// to implement the desired behaviour in the high level protocol
 pub struct GenericServer<T: ServerType> {
     /// id of the node
@@ -165,7 +165,7 @@ pub struct GenericServer<T: ServerType> {
     /// this is useful as it allows to know when to try
     /// sending again the pending packets
     graph_updated: bool,
-    /// channel to communicate [ServerEvent]s to the controller 
+    /// channel to communicate [ServerEvent]s to the controller
     controller_send: Sender<ServerEvent>,
     /// channel to receive [ServerCommand]s from the controller
     controller_recv: Receiver<ServerCommand>,
@@ -191,8 +191,8 @@ pub struct GenericServer<T: ServerType> {
 }
 
 /// Default estiamtor used by the [GenericServer]: the estimator uses an exponentially
-/// weighted moving average (EWMA). 
-/// the formula is as follows: 
+/// weighted moving average (EWMA).
+/// the formula is as follows:
 ///     ETX(n) = p(n) * alpha + ETX(n - 1) * beta
 ///     ETX(0) = [INITIAL_ETX]
 /// where ETX(n) is the ETX at time n
