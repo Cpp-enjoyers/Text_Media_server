@@ -151,7 +151,7 @@ mod client_interaction_tests {
 
     /// generic test of a full protocol interaction, for the specialised tests see below
     /// the only thing to specialise is the file to request
-    /// 
+    ///
     /// the interaction is as follows:
     /// - Type query
     /// - Listing of file

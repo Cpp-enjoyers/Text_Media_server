@@ -37,7 +37,7 @@ mod packet_tests {
         assert!(server.sent_history.len() == 1);
     }
 
-    /// tests correct [Nack] to pending behaviour 
+    /// tests correct [Nack] to pending behaviour
     #[test]
     fn test_nack_to_pending() {
         let mut server: GenericServer<Text> = get_dummy_server_text();

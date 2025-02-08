@@ -116,10 +116,10 @@ mod networking_tests {
     }
 
     /// test flood network construction in a small topology
-    /// 1 
+    /// 1
     ///  \
     ///   11--12
-    ///  /  \ 
+    ///  /  \
     /// 14--13
     /// 1: Server, [11, 12, 13, 14]: Drones
     #[test]

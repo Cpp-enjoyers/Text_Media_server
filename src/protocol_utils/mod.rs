@@ -18,7 +18,7 @@ pub(crate) const RID_MASK: u64 = 0x0000_0000_0000_FFFF;
 /// ``` text
 ///     given rid = 0x9 (0b1001) and sid = 0xD (0b1101)
 ///     the resulting response id will be: 0x9000D (0b1001000000001101)
-/// ``` 
+/// ```
 /// Rust example:
 /// ```
 /// # use ap2024_unitn_cppenjoyers_webservers::protocol_utils::generate_response_id;
