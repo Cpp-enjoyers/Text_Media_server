@@ -10,10 +10,10 @@
  *
  * The estimator uses an exponentially weighted moving average (EWMA),
  * the formula is as follows:
- *
+ * ``` text
  *     ETX(n) = p(n) * alpha + ETX(n - 1) * beta
  *     ETX(0) = default_etx_value
- *
+ * ```
  * where:
  * - ETX(n) is the ETX at time n
  * - p(n) is the estimated ETX at time n, calculated from the last k samples (k is a predefined constant)
