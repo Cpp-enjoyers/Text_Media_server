@@ -264,7 +264,7 @@ where
     }
 }
 
-impl<T: ServerType> Server for GenericServer<T>
+impl<T: ServerType + Send> Server for GenericServer<T>
 where
     GenericServer<T>: RequestHandler,
 {
