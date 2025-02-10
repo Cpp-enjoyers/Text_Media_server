@@ -105,6 +105,7 @@ impl<T: ST> GenericServer<T> {
                                 frag,
                             ),
                         );
+                        info!("Sending response: {packet}");
                         self.session_id = network_protocol::next_sid(self.session_id);
                         let _ = next_hop.send(packet.clone());
                         let _ = self.controller_send.send(ServerEvent::PacketSent(packet));
@@ -123,6 +124,7 @@ impl<T: ST> GenericServer<T> {
                                 frag,
                             ),
                         );
+                        info!("No path found, sending response to pending");
                         self.session_id = network_protocol::next_sid(self.session_id);
                         self.pending_packets.push_back(sid);
                     }
