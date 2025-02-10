@@ -104,6 +104,7 @@ where
     /// sends an [Ack] after a successful reception of a fragment
     /// since [Ack]s are not droppable, if a route is not found, it is sent
     /// using the controller shortcut
+    /// Note that [Ack]s have the same sid of the acknowledged [Fragment]
     pub(super) fn send_ack(
         &mut self,
         srch: &SourceRoutingHeader,
