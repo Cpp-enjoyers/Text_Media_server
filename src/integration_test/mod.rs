@@ -1,6 +1,7 @@
 /// module with testing of Client/Server interaction if a double chain network
 #[cfg(test)]
 mod client_interaction_tests {
+    use std::collections::HashMap;
     #[allow(unused_imports)]
     use std::{
         env,
@@ -13,7 +14,8 @@ mod client_interaction_tests {
     use ap2024_unitn_cppenjoyers_drone::CppEnjoyersDrone;
     use common::{
         slc_commands::{
-            ServerCommand, ServerEvent, TextMediaResponse, WebClientCommand, WebClientEvent,
+            ServerCommand, ServerEvent, ServerType, TextMediaResponse, WebClientCommand,
+            WebClientEvent,
         },
         Client, Server,
     };
@@ -192,8 +194,13 @@ mod client_interaction_tests {
                         _flag = true;
                         break;
                     }
-                    WebClientEvent::ServersTypes(_) => {
-                        let _ = cctrl.send(WebClientCommand::AskListOfFiles(11));
+                    WebClientEvent::ServersTypes(l) => {
+                        if l == HashMap::from([
+                            (11, ServerType::FileServer),
+                            (13, ServerType::MediaServer),
+                        ]) {
+                            let _ = cctrl.send(WebClientCommand::AskListOfFiles(11));
+                        }
                     }
                     WebClientEvent::ListOfFiles(_, _) => {
                         let _ = cctrl.send(WebClientCommand::RequestFile(file.clone(), 11));
